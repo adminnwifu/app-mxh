@@ -106,11 +106,16 @@ class UserFriendService {
     required String displayName,
     required String bio,
     required String avatarUrl,
+    String? coverUrl,
   }) async {
-    await _firestore.collection('users').doc(uid).update({
+    final Map<String, dynamic> data = {
       'displayName': displayName,
       'bio': bio,
       'avatarUrl': avatarUrl,
-    });
+    };
+    if (coverUrl != null) {
+      data['coverUrl'] = coverUrl;
+    }
+    await _firestore.collection('users').doc(uid).update(data);
   }
 }

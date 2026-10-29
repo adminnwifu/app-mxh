@@ -4,6 +4,7 @@ class UserModel {
   final String displayName;
   final String bio;
   final String avatarUrl;
+  final String coverUrl;
   final List<String> friendIds;
 
   UserModel({
@@ -12,6 +13,7 @@ class UserModel {
     required this.displayName,
     this.bio = '',
     this.avatarUrl = '',
+    this.coverUrl = '',
     this.friendIds = const [],
   });
 
@@ -22,6 +24,7 @@ class UserModel {
       'displayName': displayName,
       'bio': bio,
       'avatarUrl': avatarUrl,
+      'coverUrl': coverUrl,
       'friendIds': friendIds,
     };
   }
@@ -33,6 +36,7 @@ class UserModel {
       displayName: map['displayName'] ?? '',
       bio: map['bio'] ?? '',
       avatarUrl: map['avatarUrl'] ?? '',
+      coverUrl: map['coverUrl'] ?? '',
       friendIds: List<String>.from(map['friendIds'] ?? []),
     );
   }

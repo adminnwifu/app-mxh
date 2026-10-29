@@ -51,7 +51,7 @@ class UserProfileDetailScreen extends StatelessWidget {
                           alignment: Alignment.bottomCenter,
                           children: [
                             Container(
-                              height: 140,
+                              height: 150,
                               width: double.infinity,
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
@@ -63,6 +63,16 @@ class UserProfileDetailScreen extends StatelessWidget {
                                   end: Alignment.bottomRight,
                                 ),
                               ),
+                              child: user.coverUrl.isNotEmpty
+                                  ? Image.network(
+                                      user.coverUrl,
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                      height: 150,
+                                      errorBuilder: (context, error, stackTrace) =>
+                                          const SizedBox.shrink(),
+                                    )
+                                  : null,
                             ),
                             Positioned(
                               bottom: -40,
