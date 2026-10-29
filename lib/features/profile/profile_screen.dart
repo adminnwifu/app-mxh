@@ -392,17 +392,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               label: const Text('Chỉnh sửa hồ sơ'),
                             ),
                           ),
-                          const SizedBox(width: 10),
-                          OutlinedButton.icon(
-                            onPressed: () => _showSettingsSheet(context),
-                            style: OutlinedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            icon: const Icon(Icons.settings_outlined, size: 18),
-                            label: const Text('Cài đặt'),
-                          ),
                         ],
                       ),
                     ),
