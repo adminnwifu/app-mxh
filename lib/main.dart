@@ -185,7 +185,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             NavigationDestination(
               icon: const Icon(Icons.home_outlined),
               selectedIcon: Icon(Icons.home_rounded, color: primary),
-              label: 'Bảng tin',
+              label: 'Trang chủ',
             ),
             NavigationDestination(
               icon: const Icon(Icons.people_outline_rounded),
