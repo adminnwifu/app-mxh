@@ -18,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   bool _isLoginMode = true;
   bool _isLoading = false;
@@ -34,11 +35,32 @@ class _LoginScreenState extends State<LoginScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (!_isLoginMode && _passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.error_outline_rounded, color: Colors.white),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text('Mật khẩu xác nhận không trùng khớp. Vui lòng kiểm tra lại!'),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -346,8 +368,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           prefixIcon: Icon(Icons.person_outline_rounded),
                         ),
                         validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Vui lòng nhập tên hiển thị';
+                          if (!_isLoginMode) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Vui lòng nhập tên hiển thị';
+                            }
                           }
                           return null;
                         },
@@ -401,6 +425,41 @@ class _LoginScreenState extends State<LoginScreen> {
                         return null;
                       },
                     ),
+
+                    if (!_isLoginMode) ...[
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        key: const ValueKey('confirm_password_field'),
+                        controller: _confirmPasswordController,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          labelText: 'Xác nhận mật khẩu',
+                          hintText: 'Nhập lại mật khẩu',
+                          prefixIcon: const Icon(Icons.lock_reset_rounded),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                            onPressed: () {
+                              setState(() => _obscurePassword = !_obscurePassword);
+                            },
+                          ),
+                        ),
+                        validator: (value) {
+                          if (!_isLoginMode) {
+                            if (value == null || value.isEmpty) {
+                              return 'Vui lòng xác nhận lại mật khẩu';
+                            }
+                            if (value != _passwordController.text) {
+                              return 'Mật khẩu xác nhận không trùng khớp';
+                            }
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
 
                     if (_isLoginMode) ...[
                       Align(
