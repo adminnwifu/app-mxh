@@ -65,9 +65,11 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final cleanEmail = _emailController.text.trim().toLowerCase();
+
       if (_isLoginMode) {
         await _authService.signInWithEmail(
-          email: _emailController.text.trim(),
+          email: cleanEmail,
           password: _passwordController.text,
         );
 
@@ -90,7 +92,6 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
 
-        // Bắn thông báo hệ thống về điện thoại
         await NotificationService().showLocalNotification(
           id: 1001,
           title: '🎉 Đăng nhập thành công',
@@ -98,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else {
         await _authService.registerWithEmail(
-          email: _emailController.text.trim(),
+          email: cleanEmail,
           password: _passwordController.text,
           displayName: _nameController.text.trim(),
         );
@@ -122,7 +123,6 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
 
-        // Bắn thông báo hệ thống về điện thoại
         await NotificationService().showLocalNotification(
           id: 1002,
           title: '🎉 Đăng ký thành công',
@@ -171,6 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: resetEmailCtrl,
+              keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
                 labelText: 'Địa chỉ Email',
                 prefixIcon: Icon(Icons.email_outlined),
@@ -185,6 +186,17 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           FilledButton(
             onPressed: () {
+              final emailText = resetEmailCtrl.text.trim();
+              if (emailText.isEmpty || !emailText.contains('@')) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Vui lòng nhập địa chỉ Email hợp lệ.'),
+                    backgroundColor: Colors.redAccent,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                return;
+              }
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -392,8 +404,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (value == null || value.trim().isEmpty) {
                           return 'Vui lòng nhập email';
                         }
-                        if (!value.contains('@')) {
-                          return 'Email không hợp lệ';
+                        final cleanEmail = value.trim();
+                        final emailRegex = RegExp(
+                          r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                        );
+                        if (!emailRegex.hasMatch(cleanEmail)) {
+                          return 'Email không hợp lệ (Ví dụ: name@gmail.com)';
                         }
                         return null;
                       },

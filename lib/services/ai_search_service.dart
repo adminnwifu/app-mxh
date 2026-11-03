@@ -100,14 +100,16 @@ class AiSearchService {
     scoredUsers.sort((a, b) => b.value.compareTo(a.value));
     final matchedUsers = scoredUsers.map((e) => e.key).toList();
 
-    // 4. TÌM KIẾM & XẾP HẠNG BÀI VIẾT (Post Scoring)
+    // 4. TÌM KIẾM & XẾP HẠNG BÀI VIẾT (Post Scoring & Privacy Filtering)
     final List<MapEntry<PostModel, double>> scoredPosts = [];
     for (var post in allPosts) {
-      // Lọc quyền riêng tư
-      if (post.visibility == 'friends' &&
-          post.authorId != currentUserId &&
-          !currentUserFriendIds.contains(post.authorId)) {
-        continue;
+      // Lọc quy tắc quyền riêng tư (Privacy Filtering)
+      if (post.authorId != currentUserId) {
+        if (post.visibility == 'private') continue;
+        if (post.visibility == 'friends' &&
+            !currentUserFriendIds.contains(post.authorId)) {
+          continue;
+        }
       }
 
       double score = 0.0;

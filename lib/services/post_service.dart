@@ -41,15 +41,22 @@ class PostService {
       }).toList();
 
       return allPosts.where((post) {
-        if (post.visibility == 'public') return true;
         if (post.authorId == currentUserId) return true;
-        if (currentUserFriendIds.contains(post.authorId)) return true;
+        if (post.visibility == 'private') return false;
+        if (post.visibility == 'public') return true;
+        if (post.visibility == 'friends') {
+          return currentUserFriendIds.contains(post.authorId);
+        }
         return false;
       }).toList();
-    });
+    }).asBroadcastStream();
   }
 
-  Stream<List<PostModel>> getUserPostsStream(String userId) {
+  Stream<List<PostModel>> getUserPostsStream(
+    String userId, {
+    String? viewerId,
+    List<String>? viewerFriendIds,
+  }) {
     return _firestore
         .collection('posts')
         .where('authorId', isEqualTo: userId)
@@ -59,8 +66,19 @@ class PostService {
         return PostModel.fromMap(doc.data(), doc.id);
       }).toList();
       posts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      if (viewerId != null && viewerId != userId) {
+        final isFriend = viewerFriendIds?.contains(userId) ?? false;
+        return posts.where((p) {
+          if (p.visibility == 'private') return false;
+          if (p.visibility == 'public') return true;
+          if (p.visibility == 'friends') return isFriend;
+          return false;
+        }).toList();
+      }
+
       return posts;
-    });
+    }).asBroadcastStream();
   }
 
   Future<void> toggleLike({
@@ -79,7 +97,6 @@ class PostService {
         'likes': FieldValue.arrayUnion([currentUser.uid]),
       });
 
-      // Bắn thông báo Like
       await NotificationService().sendNotification(
         recipientId: postAuthorId,
         sender: currentUser,
@@ -101,14 +118,41 @@ class PostService {
       return snapshot.docs.map((doc) {
         return CommentModel.fromMap(doc.data(), doc.id);
       }).toList();
-    });
+    }).asBroadcastStream();
   }
 
+  /// Bật/tắt thả tim cho từng bình luận
+  Future<void> toggleCommentLike({
+    required String postId,
+    required String commentId,
+    required String currentUid,
+    required bool isCurrentlyLiked,
+  }) async {
+    final commentRef = _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId);
+
+    if (isCurrentlyLiked) {
+      await commentRef.update({
+        'likes': FieldValue.arrayRemove([currentUid]),
+      });
+    } else {
+      await commentRef.update({
+        'likes': FieldValue.arrayUnion([currentUid]),
+      });
+    }
+  }
+
+  /// Thêm bình luận mới (hỗ trợ trả lời từng bình luận cụ thể)
   Future<void> addComment({
     required String postId,
     required String postAuthorId,
     required UserModel author,
     required String text,
+    String? replyToId,
+    String? replyToName,
   }) async {
     final comment = CommentModel(
       commentId: '',
@@ -116,6 +160,9 @@ class PostService {
       authorName: author.displayName,
       authorAvatar: author.avatarUrl,
       text: text,
+      likes: [],
+      replyToId: replyToId,
+      replyToName: replyToName,
       createdAt: DateTime.now(),
     );
 
@@ -132,13 +179,16 @@ class PostService {
       transaction.set(newCommentRef, comment.toMap());
     });
 
-    // Bắn thông báo Comment
+    final notifText = replyToName != null
+        ? 'đã trả lời bình luận của $replyToName: "$text"'
+        : text;
+
     await NotificationService().sendNotification(
       recipientId: postAuthorId,
       sender: author,
       type: 'comment',
       postId: postId,
-      text: text,
+      text: notifText,
     );
   }
 }

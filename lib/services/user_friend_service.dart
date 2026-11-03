@@ -9,13 +9,14 @@ class UserFriendService {
     return _firestore.collection('users').doc(uid).snapshots().map((doc) {
       if (!doc.exists) return null;
       return UserModel.fromMap(doc.data()!, doc.id);
-    });
+    }).asBroadcastStream();
   }
 
   Stream<List<UserModel>> getFriendsListStream(List<String> friendIds) {
-    if (friendIds.isEmpty) return Stream.value([]);
+    if (friendIds.isEmpty) {
+      return Stream.value(<UserModel>[]).asBroadcastStream();
+    }
 
-    // Firestore whereIn supports up to 10 items. Chunk if needed or query all users
     return _firestore
         .collection('users')
         .where(FieldPath.documentId, whereIn: friendIds.take(10).toList())
@@ -24,7 +25,7 @@ class UserFriendService {
       return snapshot.docs.map((doc) {
         return UserModel.fromMap(doc.data(), doc.id);
       }).toList();
-    });
+    }).asBroadcastStream();
   }
 
   Stream<List<FriendRequestModel>> getIncomingRequestsStream(String uid) {
@@ -36,7 +37,7 @@ class UserFriendService {
       return snapshot.docs.map((doc) {
         return FriendRequestModel.fromMap(doc.data(), doc.id);
       }).toList();
-    });
+    }).asBroadcastStream();
   }
 
   Future<List<UserModel>> searchUsers(String currentUid, String query) async {
@@ -60,7 +61,6 @@ class UserFriendService {
     required UserModel sender,
     required String receiverId,
   }) async {
-    // Kiểm tra xem đã tồn tại request chưa
     final existing = await _firestore
         .collection('friend_requests')
         .where('senderId', isEqualTo: sender.uid)
