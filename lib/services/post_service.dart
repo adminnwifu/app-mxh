@@ -87,22 +87,62 @@ class PostService {
     required UserModel currentUser,
     required bool isCurrentlyLiked,
   }) async {
-    final postRef = _firestore.collection('posts').doc(postId);
     if (isCurrentlyLiked) {
+      await setReaction(
+        postId: postId,
+        postAuthorId: postAuthorId,
+        currentUser: currentUser,
+        reactionType: null,
+      );
+    } else {
+      await setReaction(
+        postId: postId,
+        postAuthorId: postAuthorId,
+        currentUser: currentUser,
+        reactionType: 'like',
+      );
+    }
+  }
+
+  Future<void> setReaction({
+    required String postId,
+    required String postAuthorId,
+    required UserModel currentUser,
+    required String? reactionType,
+  }) async {
+    final postRef = _firestore.collection('posts').doc(postId);
+
+    if (reactionType == null) {
       await postRef.update({
+        'reactions.${currentUser.uid}': FieldValue.delete(),
         'likes': FieldValue.arrayRemove([currentUser.uid]),
       });
     } else {
       await postRef.update({
+        'reactions.${currentUser.uid}': reactionType,
         'likes': FieldValue.arrayUnion([currentUser.uid]),
       });
+
+      final String emojiText = reactionType == 'love'
+          ? '❤️ Yêu thích'
+          : reactionType == 'care'
+              ? '🥰 Thương thương'
+              : reactionType == 'haha'
+                  ? '😆 Haha'
+                  : reactionType == 'wow'
+                      ? '😲 Wow'
+                      : reactionType == 'sad'
+                          ? '😢 Buồn'
+                          : reactionType == 'angry'
+                              ? '😡 Phẫn nộ'
+                              : '👍 Thích';
 
       await NotificationService().sendNotification(
         recipientId: postAuthorId,
         sender: currentUser,
         type: 'like',
         postId: postId,
-        text: 'đã thích bài viết của bạn',
+        text: 'đã bày tỏ cảm xúc $emojiText cho bài viết của bạn',
       );
     }
   }
@@ -125,8 +165,32 @@ class PostService {
   Future<void> toggleCommentLike({
     required String postId,
     required String commentId,
-    required String currentUid,
+    required UserModel currentUser,
     required bool isCurrentlyLiked,
+  }) async {
+    if (isCurrentlyLiked) {
+      await setCommentReaction(
+        postId: postId,
+        commentId: commentId,
+        currentUser: currentUser,
+        reactionType: null,
+      );
+    } else {
+      await setCommentReaction(
+        postId: postId,
+        commentId: commentId,
+        currentUser: currentUser,
+        reactionType: 'like',
+      );
+    }
+  }
+
+  /// Bày tỏ cảm xúc cho bình luận (like, love, care, haha, wow, sad, angry)
+  Future<void> setCommentReaction({
+    required String postId,
+    required String commentId,
+    required UserModel currentUser,
+    required String? reactionType,
   }) async {
     final commentRef = _firestore
         .collection('posts')
@@ -134,23 +198,26 @@ class PostService {
         .collection('comments')
         .doc(commentId);
 
-    if (isCurrentlyLiked) {
+    if (reactionType == null) {
       await commentRef.update({
-        'likes': FieldValue.arrayRemove([currentUid]),
+        'reactions.${currentUser.uid}': FieldValue.delete(),
+        'likes': FieldValue.arrayRemove([currentUser.uid]),
       });
     } else {
       await commentRef.update({
-        'likes': FieldValue.arrayUnion([currentUid]),
+        'reactions.${currentUser.uid}': reactionType,
+        'likes': FieldValue.arrayUnion([currentUser.uid]),
       });
     }
   }
 
-  /// Thêm bình luận mới (hỗ trợ trả lời từng bình luận cụ thể)
+  /// Thêm bình luận mới (hỗ trợ kèm ảnh & trả lời từng bình luận cụ thể)
   Future<void> addComment({
     required String postId,
     required String postAuthorId,
     required UserModel author,
     required String text,
+    String? imageUrl,
     String? replyToId,
     String? replyToName,
   }) async {
@@ -160,6 +227,7 @@ class PostService {
       authorName: author.displayName,
       authorAvatar: author.avatarUrl,
       text: text,
+      imageUrl: imageUrl,
       likes: [],
       replyToId: replyToId,
       replyToName: replyToName,
@@ -181,7 +249,9 @@ class PostService {
 
     final notifText = replyToName != null
         ? 'đã trả lời bình luận của $replyToName: "$text"'
-        : text;
+        : text.isNotEmpty
+            ? text
+            : 'đã gửi một hình ảnh trong bình luận';
 
     await NotificationService().sendNotification(
       recipientId: postAuthorId,
@@ -190,5 +260,40 @@ class PostService {
       postId: postId,
       text: notifText,
     );
+  }
+
+  /// Xóa bình luận
+  Future<void> deleteComment({
+    required String postId,
+    required String commentId,
+  }) async {
+    final postRef = _firestore.collection('posts').doc(postId);
+    final commentRef = postRef.collection('comments').doc(commentId);
+
+    await _firestore.runTransaction((transaction) async {
+      final postSnap = await transaction.get(postRef);
+      if (postSnap.exists) {
+        int currentCount = postSnap.data()?['commentCount'] ?? 1;
+        int newCount = (currentCount - 1).clamp(0, 999999);
+        transaction.update(postRef, {'commentCount': newCount});
+      }
+      transaction.delete(commentRef);
+    });
+  }
+
+  /// Chỉnh sửa nội dung bình luận
+  Future<void> editComment({
+    required String postId,
+    required String commentId,
+    required String newText,
+  }) async {
+    await _firestore
+        .collection('posts')
+        .doc(postId)
+        .collection('comments')
+        .doc(commentId)
+        .update({
+      'text': newText,
+    });
   }
 }

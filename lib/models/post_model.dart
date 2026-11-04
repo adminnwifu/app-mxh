@@ -8,6 +8,7 @@ class PostModel {
   final String content;
   final String visibility; // 'public' or 'friends'
   final List<String> likes;
+  final Map<String, String> reactions; // userId -> reactionType ('like', 'love', 'care', 'haha', 'wow', 'sad', 'angry')
   final int commentCount;
   final DateTime createdAt;
 
@@ -19,13 +20,26 @@ class PostModel {
     required this.content,
     required this.visibility,
     required this.likes,
+    this.reactions = const {},
     required this.commentCount,
     required this.createdAt,
   });
 
-  bool isLikedBy(String userId) {
-    return likes.contains(userId);
+  String? getReactionOf(String userId) {
+    if (reactions.containsKey(userId)) {
+      return reactions[userId];
+    }
+    if (likes.contains(userId)) {
+      return 'like';
+    }
+    return null;
   }
+
+  bool isLikedBy(String userId) {
+    return reactions.containsKey(userId) || likes.contains(userId);
+  }
+
+  int get totalReactions => reactions.isNotEmpty ? reactions.length : likes.length;
 
   Map<String, dynamic> toMap() {
     return {
@@ -35,6 +49,7 @@ class PostModel {
       'content': content,
       'visibility': visibility,
       'likes': likes,
+      'reactions': reactions,
       'commentCount': commentCount,
       'createdAt': Timestamp.fromDate(createdAt),
     };
@@ -46,6 +61,14 @@ class PostModel {
     if (timestamp is Timestamp) {
       date = timestamp.toDate();
     }
+
+    Map<String, String> reactionsMap = {};
+    if (map['reactions'] != null && map['reactions'] is Map) {
+      (map['reactions'] as Map).forEach((key, value) {
+        reactionsMap[key.toString()] = value.toString();
+      });
+    }
+
     return PostModel(
       postId: documentId,
       authorId: map['authorId'] ?? '',
@@ -54,6 +77,7 @@ class PostModel {
       content: map['content'] ?? '',
       visibility: map['visibility'] ?? 'public',
       likes: List<String>.from(map['likes'] ?? []),
+      reactions: reactionsMap,
       commentCount: map['commentCount'] ?? 0,
       createdAt: date,
     );

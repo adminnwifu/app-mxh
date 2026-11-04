@@ -17,8 +17,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showEditProfileDialog(BuildContext context, UserModel user) {
     final nameCtrl = TextEditingController(text: user.displayName);
     final bioCtrl = TextEditingController(text: user.bio);
-    final avatarCtrl = TextEditingController(text: user.avatarUrl);
-    final coverCtrl = TextEditingController(text: user.coverUrl);
 
     showModalBottomSheet(
       context: context,
@@ -71,22 +69,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     prefixIcon: Icon(Icons.notes_rounded),
                   ),
                 ),
-                const SizedBox(height: 14),
-                TextField(
-                  controller: avatarCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'URL Ảnh đại diện (Avatar)',
-                    prefixIcon: Icon(Icons.link_rounded),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                TextField(
-                  controller: coverCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'URL Ảnh bìa (Cover)',
-                    prefixIcon: Icon(Icons.wallpaper_rounded),
-                  ),
-                ),
                 const SizedBox(height: 20),
                 FilledButton(
                   onPressed: () async {
@@ -94,8 +76,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       uid: user.uid,
                       displayName: nameCtrl.text.trim(),
                       bio: bioCtrl.text.trim(),
-                      avatarUrl: avatarCtrl.text.trim(),
-                      coverUrl: coverCtrl.text.trim(),
+                      avatarUrl: user.avatarUrl,
+                      coverUrl: user.coverUrl,
                     );
                     if (ctx.mounted) {
                       Navigator.pop(ctx);
