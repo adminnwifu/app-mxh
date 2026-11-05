@@ -173,155 +173,195 @@ class FeedScreen extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            final theme = Theme.of(context);
+            final isDark = theme.brightness == Brightness.dark;
+            final onSurfaceColor = theme.colorScheme.onSurface;
+            final secondaryTextColor = isDark ? Colors.white70 : Colors.grey.shade800;
+            final pillBgColor = isDark ? const Color(0xFF334155) : Colors.grey.shade100;
+            final pillBorderColor = isDark ? const Color(0xFF475569) : Colors.grey.shade300;
+
             return Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
-                left: 16,
-                right: 16,
-                top: 16,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Tạo bài viết mới',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        icon: const Icon(Icons.close),
-                      ),
-                    ],
-                  ),
-                  const Divider(),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: CircleAvatar(
-                      radius: 22,
-                      backgroundImage: currentUser.avatarUrl.isNotEmpty
-                          ? NetworkImage(currentUser.avatarUrl)
-                          : null,
-                      child: currentUser.avatarUrl.isEmpty
-                          ? const Icon(Icons.person)
-                          : null,
-                    ),
-                    title: Text(
-                      currentUser.displayName,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: PopupMenuButton<String>(
-                      initialValue: selectedVisibility,
-                      onSelected: (val) {
-                        setDialogState(() => selectedVisibility = val);
-                      },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: theme.scaffoldBackgroundColor,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        width: 36,
+                        height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              selectedVisibility == 'public'
-                                  ? Icons.public
-                                  : selectedVisibility == 'friends'
-                                      ? Icons.group
-                                      : Icons.lock,
-                              size: 14,
-                              color: Colors.grey.shade700,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              selectedVisibility == 'public'
-                                  ? 'Công khai'
-                                  : selectedVisibility == 'friends'
-                                      ? 'Bạn bè'
-                                      : 'Chỉ mình tôi',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                            const Icon(Icons.arrow_drop_down, size: 18),
-                          ],
+                          color: isDark ? Colors.grey.shade600 : Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(
-                          value: 'public',
-                          child: Row(
-                            children: [
-                              Icon(Icons.public, size: 18, color: Colors.blueAccent),
-                              SizedBox(width: 8),
-                              Text('Công khai'),
-                            ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Tạo bài viết mới',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: onSurfaceColor,
                           ),
                         ),
-                        PopupMenuItem(
-                          value: 'friends',
-                          child: Row(
-                            children: [
-                              Icon(Icons.group, size: 18, color: Colors.green),
-                              SizedBox(width: 8),
-                              Text('Bạn bè'),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'private',
-                          child: Row(
-                            children: [
-                              Icon(Icons.lock, size: 18, color: Colors.redAccent),
-                              SizedBox(width: 8),
-                              Text('Chỉ mình tôi'),
-                            ],
-                          ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          icon: Icon(Icons.close, color: onSurfaceColor),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: contentController,
-                    maxLines: 6,
-                    autofocus: true,
-                    decoration: const InputDecoration(
-                      hintText: 'Bạn đang nghĩ gì thế?',
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      fillColor: Colors.transparent,
+                    const Divider(),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: CircleAvatar(
+                        radius: 22,
+                        backgroundImage: currentUser.avatarUrl.isNotEmpty
+                            ? NetworkImage(currentUser.avatarUrl)
+                            : null,
+                        child: currentUser.avatarUrl.isEmpty
+                            ? const Icon(Icons.person)
+                            : null,
+                      ),
+                      title: Text(
+                        currentUser.displayName,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: onSurfaceColor,
+                        ),
+                      ),
+                      subtitle: PopupMenuButton<String>(
+                        initialValue: selectedVisibility,
+                        onSelected: (val) {
+                          setDialogState(() => selectedVisibility = val);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: pillBgColor,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: pillBorderColor),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                selectedVisibility == 'public'
+                                    ? Icons.public
+                                    : selectedVisibility == 'friends'
+                                        ? Icons.group
+                                        : Icons.lock,
+                                size: 14,
+                                color: secondaryTextColor,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                selectedVisibility == 'public'
+                                    ? 'Công khai'
+                                    : selectedVisibility == 'friends'
+                                        ? 'Bạn bè'
+                                        : 'Chỉ mình tôi',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: secondaryTextColor,
+                                ),
+                              ),
+                              Icon(Icons.arrow_drop_down,
+                                  size: 18, color: secondaryTextColor),
+                            ],
+                          ),
+                        ),
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(
+                            value: 'public',
+                            child: Row(
+                              children: [
+                                Icon(Icons.public, size: 18, color: Colors.blueAccent),
+                                SizedBox(width: 8),
+                                Text('Công khai'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'friends',
+                            child: Row(
+                              children: [
+                                Icon(Icons.group, size: 18, color: Colors.green),
+                                SizedBox(width: 8),
+                                Text('Bạn bè'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'private',
+                            child: Row(
+                              children: [
+                                Icon(Icons.lock, size: 18, color: Colors.redAccent),
+                                SizedBox(width: 8),
+                                Text('Chỉ mình tôi'),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: () async {
-                      if (contentController.text.trim().isEmpty) return;
-                      await PostService().createPost(
-                        author: currentUser,
-                        content: contentController.text.trim(),
-                        visibility: selectedVisibility,
-                      );
-                      if (ctx.mounted) Navigator.pop(ctx);
-                    },
-                    child: const Text('Đăng bài ngay'),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: contentController,
+                      maxLines: 6,
+                      autofocus: true,
+                      style: TextStyle(
+                        fontSize: 16,
+                        height: 1.4,
+                        color: onSurfaceColor,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Bạn đang nghĩ gì thế?',
+                        hintStyle: TextStyle(
+                          color: isDark ? Colors.white54 : Colors.grey.shade500,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        fillColor: Colors.transparent,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: () async {
+                        if (contentController.text.trim().isEmpty) return;
+                        await PostService().createPost(
+                          author: currentUser,
+                          content: contentController.text.trim(),
+                          visibility: selectedVisibility,
+                        );
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      },
+                      child: const Text('Đăng bài ngay'),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             );
           },
@@ -489,47 +529,59 @@ class FeedScreen extends StatelessWidget {
 
                 // CREATE POST QUICK TRIGGER BAR
                 SliverToBoxAdapter(
-                  child: Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 18,
-                            backgroundImage: currentUser.avatarUrl.isNotEmpty
-                                ? NetworkImage(currentUser.avatarUrl)
-                                : null,
-                            child: currentUser.avatarUrl.isEmpty
-                                ? const Icon(Icons.person, size: 18)
-                                : null,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => _showCreatePostDialog(context, currentUser),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 10,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade100,
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
-                                child: Text(
-                                  'Bạn đang nghĩ gì thế, ${currentUser.displayName.split(' ').last}?',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontSize: 13,
+                  child: Builder(
+                    builder: (context) {
+                      final isDark = Theme.of(context).brightness == Brightness.dark;
+                      final pillBgColor = isDark ? const Color(0xFF334155) : Colors.grey.shade100;
+                      final pillTextColor = isDark ? Colors.white70 : Colors.grey.shade700;
+
+                      return Card(
+                        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 18,
+                                backgroundImage: currentUser.avatarUrl.isNotEmpty
+                                    ? NetworkImage(currentUser.avatarUrl)
+                                    : null,
+                                child: currentUser.avatarUrl.isEmpty
+                                    ? const Icon(Icons.person, size: 18)
+                                    : null,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () => _showCreatePostDialog(context, currentUser),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: pillBgColor,
+                                      borderRadius: BorderRadius.circular(24),
+                                      border: Border.all(
+                                        color: isDark ? const Color(0xFF475569) : Colors.transparent,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'Bạn đang nghĩ gì thế, ${currentUser.displayName.split(' ').last}?',
+                                      style: TextStyle(
+                                        color: pillTextColor,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   ),
                 ),
 
@@ -1301,13 +1353,16 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = theme.colorScheme.primary;
+    final backgroundColor = isDark ? const Color(0xFF0F172A) : const Color(0xFF1E293B);
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.88,
-      decoration: const BoxDecoration(
-        color: Color(0xFF1E293B),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SafeArea(
         child: Column(
