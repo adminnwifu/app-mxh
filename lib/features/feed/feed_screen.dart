@@ -2243,35 +2243,40 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                     onLongPress: () => _showReactionPicker(context),
                     borderRadius: BorderRadius.circular(8),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           if (reactionInfo != null) ...[
                             Text(
                               reactionInfo.emoji,
-                              style: const TextStyle(fontSize: 18),
+                              style: const TextStyle(fontSize: 16),
                             ),
-                            const SizedBox(width: 6),
-                            Text(
-                              reactionInfo.label,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: reactionInfo.color,
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  reactionInfo.label,
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.bold,
+                                    color: reactionInfo.color,
+                                  ),
+                                ),
                               ),
                             ),
                           ] else ...[
                             Icon(
                               Icons.thumb_up_alt_outlined,
                               color: Colors.grey.shade700,
-                              size: 19,
+                              size: 18,
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: 4),
                             Text(
                               'Thích',
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 12.5,
                                 color: Colors.grey.shade700,
                               ),
                             ),
@@ -2287,23 +2292,28 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                     onTap: () => _openCommentSheet(context),
                     borderRadius: BorderRadius.circular(8),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.mode_comment_outlined,
                             color: Colors.grey.shade700,
-                            size: 19,
+                            size: 18,
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            widget.post.commentCount > 0
-                                ? '${widget.post.commentCount} Bình luận'
-                                : 'Bình luận',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey.shade700,
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                widget.post.commentCount > 0
+                                    ? '${widget.post.commentCount} Bình luận'
+                                    : 'Bình luận',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -2317,21 +2327,26 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                     onTap: () => _showShareOptionsSheet(context),
                     borderRadius: BorderRadius.circular(8),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.share_outlined,
                             color: Colors.grey.shade700,
-                            size: 20,
+                            size: 18,
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Chia sẻ',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey.shade700,
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'Chia sẻ',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -2644,6 +2659,74 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
     );
   }
 
+  void _navigateToUserProfile(String authorId, String authorName, String authorAvatar) {
+    final targetUser = UserModel(
+      uid: authorId,
+      email: '',
+      displayName: authorName,
+      avatarUrl: authorAvatar,
+    );
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UserProfileDetailScreen(
+          targetUser: targetUser,
+          currentUser: widget.currentUser,
+        ),
+      ),
+    );
+  }
+
+  void _showPickImageSourceSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Đính kèm hình ảnh',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.photo_library_rounded, color: Colors.blue),
+                title: const Text('Chọn ảnh từ thư viện'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_rounded, color: Colors.green),
+                title: const Text('Chụp ảnh mới'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
@@ -2716,14 +2799,21 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            CircleAvatar(
-                              radius: isReply ? 14 : 17,
-                              backgroundImage: c.authorAvatar.isNotEmpty
-                                  ? NetworkImage(c.authorAvatar)
-                                  : null,
-                              child: c.authorAvatar.isEmpty
-                                  ? Icon(Icons.person, size: isReply ? 14 : 17)
-                                  : null,
+                            GestureDetector(
+                              onTap: () => _navigateToUserProfile(
+                                c.authorId,
+                                c.authorName,
+                                c.authorAvatar,
+                              ),
+                              child: CircleAvatar(
+                                radius: isReply ? 14 : 17,
+                                backgroundImage: c.authorAvatar.isNotEmpty
+                                    ? NetworkImage(c.authorAvatar)
+                                    : null,
+                                child: c.authorAvatar.isEmpty
+                                    ? Icon(Icons.person, size: isReply ? 14 : 17)
+                                    : null,
+                              ),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
@@ -2749,11 +2839,18 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                                                 child: Wrap(
                                                   crossAxisAlignment: WrapCrossAlignment.center,
                                                   children: [
-                                                    Text(
-                                                      c.authorName,
-                                                      style: const TextStyle(
-                                                        fontWeight: FontWeight.bold,
-                                                        fontSize: 13,
+                                                    GestureDetector(
+                                                      onTap: () => _navigateToUserProfile(
+                                                        c.authorId,
+                                                        c.authorName,
+                                                        c.authorAvatar,
+                                                      ),
+                                                      child: Text(
+                                                        c.authorName,
+                                                        style: const TextStyle(
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 13,
+                                                        ),
                                                       ),
                                                     ),
                                                     if (c.replyToName != null) ...[
@@ -3084,7 +3181,7 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.photo_camera_rounded, color: Colors.black54),
-                      onPressed: () => _pickImage(ImageSource.gallery),
+                      onPressed: _showPickImageSourceSheet,
                     ),
                     Expanded(
                       child: TextField(
