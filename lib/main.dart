@@ -169,7 +169,7 @@ class MiniSocialApp extends StatelessWidget {
   }
 }
 
-/// Cổng kiểm tra trạng thái đăng nhập tự động
+/// Cổng kiểm tra trạng thái đăng nhập tự động (Hiển thị Màn hình Đăng nhập mặc định nếu chưa đăng nhập)
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
@@ -223,12 +223,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       await notifService.initializeLocalNotifications();
       notifService.listenToRealtimeNotifications(currentUid);
     }
-  }
-
-  @override
-  void dispose() {
-    NotificationService().stopListening();
-    super.dispose();
   }
 
   @override
