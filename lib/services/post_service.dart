@@ -27,6 +27,12 @@ class PostService {
     await _firestore.collection('posts').add(post.toMap());
   }
 
+  /// Xóa bài viết khỏi Firestore
+  Future<void> deletePost(String postId) async {
+    if (postId.isEmpty) return;
+    await _firestore.collection('posts').doc(postId).delete();
+  }
+
   Stream<List<PostModel>> getHomeFeedStream({
     required String currentUserId,
     required List<String> currentUserFriendIds,

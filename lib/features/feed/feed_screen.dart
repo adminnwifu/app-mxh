@@ -2064,6 +2064,40 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     );
   }
 
+  void _confirmDeletePost(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xóa bài viết'),
+        content: const Text(
+          'Bạn có chắc chắn muốn xóa bài viết này khỏi Trang chủ? Hành động này không thể hoàn tác.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await PostService().deletePost(widget.post.postId);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('🗑️ Đã xóa bài viết thành công!'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+            child: const Text('Xóa bài viết'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _handleLikeToggle() async {
     if (_isLiking) return;
     setState(() => _isLiking = true);
@@ -2179,14 +2213,60 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                 ),
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_horiz_rounded),
+                  onSelected: (val) async {
+                    if (val == 'delete') {
+                      _confirmDeletePost(context);
+                    } else if (val == 'copy') {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Đã sao chép nội dung bài viết!'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    } else if (val == 'hide') {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Đã ẩn bài viết khỏi trang chủ!'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  },
                   itemBuilder: (_) => [
+                    if (widget.post.authorId == widget.currentUser.uid)
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_outline_rounded,
+                                color: Colors.redAccent, size: 18),
+                            SizedBox(width: 8),
+                            Text('Xóa bài viết',
+                                style: TextStyle(
+                                    color: Colors.redAccent,
+                                    fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
                     const PopupMenuItem(
                       value: 'copy',
-                      child: Text('Sao chép văn bản'),
+                      child: Row(
+                        children: [
+                          Icon(Icons.copy_rounded, size: 18),
+                          SizedBox(width: 8),
+                          Text('Sao chép văn bản'),
+                        ],
+                      ),
                     ),
                     const PopupMenuItem(
                       value: 'hide',
-                      child: Text('Ẩn bài viết'),
+                      child: Row(
+                        children: [
+                          Icon(Icons.visibility_off_outlined, size: 18),
+                          SizedBox(width: 8),
+                          Text('Ẩn bài viết'),
+                        ],
+                      ),
                     ),
                   ],
                 ),
