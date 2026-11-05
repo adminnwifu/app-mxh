@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../main.dart';
 import '../../models/post_model.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
@@ -626,51 +627,122 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
+        return ValueListenableBuilder<ThemeMode>(
+          valueListenable: themeNotifier,
+          builder: (context, currentMode, _) {
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Cài đặt & Quyền riêng tư',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                  const Divider(),
+
+                  // THEME SWITCHER SECTION
+                  ListTile(
+                    leading: Icon(
+                      currentMode == ThemeMode.dark
+                          ? Icons.dark_mode_rounded
+                          : currentMode == ThemeMode.light
+                              ? Icons.light_mode_rounded
+                              : Icons.brightness_auto_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    title: const Text(
+                      'Giao diện ứng dụng',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      currentMode == ThemeMode.dark
+                          ? 'Đang bật Giao diện Tối (Dark Mode)'
+                          : currentMode == ThemeMode.light
+                              ? 'Đang bật Giao diện Sáng (Light Mode)'
+                              : 'Tự động theo hệ thống thiết bị',
+                    ),
+                    trailing: DropdownButton<ThemeMode>(
+                      value: currentMode,
+                      underline: const SizedBox.shrink(),
+                      borderRadius: BorderRadius.circular(12),
+                      items: const [
+                        DropdownMenuItem(
+                          value: ThemeMode.light,
+                          child: Row(
+                            children: [
+                              Icon(Icons.light_mode_rounded, size: 18, color: Colors.orange),
+                              SizedBox(width: 8),
+                              Text('Chế độ Sáng'),
+                            ],
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: ThemeMode.dark,
+                          child: Row(
+                            children: [
+                              Icon(Icons.dark_mode_rounded, size: 18, color: Colors.indigoAccent),
+                              SizedBox(width: 8),
+                              Text('Chế độ Tối'),
+                            ],
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: ThemeMode.system,
+                          child: Row(
+                            children: [
+                              Icon(Icons.brightness_auto_rounded, size: 18, color: Colors.teal),
+                              SizedBox(width: 8),
+                              Text('Theo hệ thống'),
+                            ],
+                          ),
+                        ),
+                      ],
+                      onChanged: (newMode) {
+                        if (newMode != null) {
+                          themeNotifier.value = newMode;
+                        }
+                      },
+                    ),
+                  ),
+
+                  ListTile(
+                    leading: const Icon(Icons.notifications_active_outlined),
+                    title: const Text('Thông báo ứng dụng'),
+                    subtitle: const Text('Đang bật nhận thông báo like/comment'),
+                    trailing: const Icon(Icons.check_circle, color: Colors.green),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.security_outlined),
+                    title: const Text('Bảo mật tài khoản'),
+                    subtitle: const Text('Xác thực qua Firebase Auth'),
+                    trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.info_outline_rounded),
+                    title: const Text('Phiên bản ứng dụng'),
+                    subtitle: const Text('MiniSocial v1.0.0'),
+                  ),
+                  const SizedBox(height: 12),
+                ],
               ),
-              const SizedBox(height: 12),
-              const Text(
-                'Cài đặt & Quyền riêng tư',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.notifications_active_outlined),
-                title: const Text('Thông báo ứng dụng'),
-                subtitle: const Text('Đang bật nhận thông báo like/comment'),
-                trailing: const Icon(Icons.check_circle, color: Colors.green),
-              ),
-              ListTile(
-                leading: const Icon(Icons.security_outlined),
-                title: const Text('Bảo mật tài khoản'),
-                subtitle: const Text('Xác thực qua Firebase Auth'),
-                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                onTap: () {
-                  Navigator.pop(ctx);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.info_outline_rounded),
-                title: const Text('Phiên bản ứng dụng'),
-                subtitle: const Text('MiniSocial v1.0.0'),
-              ),
-              const SizedBox(height: 12),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -882,28 +954,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     // BIO CARD
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                        child: Text(
-                          user.bio.isNotEmpty
-                              ? user.bio
-                              : 'Chưa có tiểu sử. Nhấn chỉnh sửa để cập nhật!',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontStyle: FontStyle.italic,
-                            color: Colors.grey.shade800,
-                            fontSize: 13,
-                          ),
-                        ),
+                      child: Builder(
+                        builder: (context) {
+                          final isDark = Theme.of(context).brightness == Brightness.dark;
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isDark ? const Color(0xFF334155) : Colors.grey.shade300,
+                              ),
+                            ),
+                            child: Text(
+                              user.bio.isNotEmpty
+                                  ? user.bio
+                                  : 'Chưa có tiểu sử. Nhấn chỉnh sửa để cập nhật!',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontStyle: FontStyle.italic,
+                                color: isDark ? Colors.white70 : Colors.grey.shade800,
+                                fontSize: 13,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -991,17 +1070,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 builder: (context, postSnap) {
                   final myPosts = postSnap.data ?? [];
                   if (myPosts.isEmpty) {
-                    return const SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.all(32.0),
-                        child: Center(
-                          child: Text(
-                            'Bạn chưa đăng bài viết nào.\nHãy chia sẻ suy nghĩ của bạn trên Trang chủ!',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.black54),
+                    return Builder(
+                      builder: (context) {
+                        final isDark = Theme.of(context).brightness == Brightness.dark;
+                        return SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32.0),
+                            child: Center(
+                              child: Text(
+                                'Bạn chưa đăng bài viết nào.\nHãy chia sẻ suy nghĩ của bạn trên Trang chủ!',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: isDark ? Colors.white70 : Colors.black54,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     );
                   }
                   return SliverList(
@@ -1023,18 +1109,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildStatItem(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(color: Colors.black54, fontSize: 12),
-        ),
-      ],
+    return Builder(
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Column(
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.black54,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

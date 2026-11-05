@@ -164,6 +164,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     final msg = messages[index];
                     final isMe = msg.senderId == widget.currentUser.uid;
                     final timeStr = DateFormat('HH:mm').format(msg.createdAt);
+                    final isDark = Theme.of(context).brightness == Brightness.dark;
 
                     return Align(
                       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -174,7 +175,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           maxWidth: MediaQuery.of(context).size.width * 0.75,
                         ),
                         decoration: BoxDecoration(
-                          color: isMe ? primaryColor : Colors.white,
+                          color: isMe
+                              ? primaryColor
+                              : (isDark ? const Color(0xFF334155) : Colors.white),
                           gradient: isMe
                               ? LinearGradient(
                                   colors: [primaryColor, primaryColor.withOpacity(0.85)],
@@ -203,7 +206,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             Text(
                               msg.text,
                               style: TextStyle(
-                                color: isMe ? Colors.white : Colors.black87,
+                                color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87),
                                 fontSize: 15,
                                 height: 1.3,
                               ),
@@ -212,7 +215,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             Text(
                               timeStr,
                               style: TextStyle(
-                                color: isMe ? Colors.white70 : Colors.black45,
+                                color: isMe ? Colors.white70 : (isDark ? Colors.white60 : Colors.black45),
                                 fontSize: 10,
                               ),
                             ),

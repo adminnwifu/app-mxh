@@ -83,20 +83,27 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   builder: (context, friendSnap) {
                     final friends = friendSnap.data ?? [];
                     if (friends.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.people_outline_rounded,
-                                size: 64, color: Colors.grey.shade400),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'Bạn chưa có người bạn nào trong danh bạ.\nHãy sang tab "Tìm bạn" để kết nối thêm!',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.black54),
+                      return Builder(
+                        builder: (context) {
+                          final isDark = Theme.of(context).brightness == Brightness.dark;
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.people_outline_rounded,
+                                    size: 64, color: Colors.grey.shade400),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Bạn chưa có người bạn nào trong danh bạ.\nHãy sang tab "Tìm bạn" để kết nối thêm!',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white70 : Colors.black54,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       );
                     }
                     return ListView.builder(
@@ -167,19 +174,26 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   builder: (context, reqSnap) {
                     final requests = reqSnap.data ?? [];
                     if (requests.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.mark_email_read_outlined,
-                                size: 64, color: Colors.grey.shade400),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'Không có lời mời kết bạn mới.',
-                              style: TextStyle(color: Colors.black54),
+                      return Builder(
+                        builder: (context) {
+                          final isDark = Theme.of(context).brightness == Brightness.dark;
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.mark_email_read_outlined,
+                                    size: 64, color: Colors.grey.shade400),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Không có lời mời kết bạn mới.',
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white70 : Colors.black54,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          );
+                        },
                       );
                     }
                     return ListView.builder(
@@ -187,6 +201,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                       itemCount: requests.length,
                       itemBuilder: (context, index) {
                         final req = requests[index];
+                        final isDark = Theme.of(context).brightness == Brightness.dark;
                         return Card(
                           margin: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 4),
@@ -217,11 +232,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
                                         ),
                                       ),
                                       const SizedBox(height: 2),
-                                      const Text(
+                                      Text(
                                         'Đã gửi lời mời kết bạn',
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: Colors.black54,
+                                          color: isDark ? Colors.white70 : Colors.black54,
                                         ),
                                       ),
                                     ],
@@ -302,13 +317,20 @@ class _FriendsScreenState extends State<FriendsScreen> {
                       child: _isSearching
                           ? const Center(child: CircularProgressIndicator())
                           : _searchResults.isEmpty
-                              ? Center(
-                                  child: Text(
-                                    _searchController.text.isEmpty
-                                        ? 'Nhập từ khóa để tìm kiếm người dùng mới.'
-                                        : 'Không tìm thấy người dùng phù hợp.',
-                                    style: const TextStyle(color: Colors.black54),
-                                  ),
+                              ? Builder(
+                                  builder: (context) {
+                                    final isDark = Theme.of(context).brightness == Brightness.dark;
+                                    return Center(
+                                      child: Text(
+                                        _searchController.text.isEmpty
+                                            ? 'Nhập từ khóa để tìm kiếm người dùng mới.'
+                                            : 'Không tìm thấy người dùng phù hợp.',
+                                        style: TextStyle(
+                                          color: isDark ? Colors.white70 : Colors.black54,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 )
                               : ListView.builder(
                                   padding:

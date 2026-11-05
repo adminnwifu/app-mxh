@@ -84,11 +84,18 @@ class _ExpandableTextWidgetState extends State<ExpandableTextWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final defaultTextColor = Theme.of(context).colorScheme.onSurface;
+    final effectiveStyle = widget.style.copyWith(
+      color: (widget.style.color == Colors.black87 || widget.style.color == Colors.black)
+          ? defaultTextColor
+          : (widget.style.color ?? defaultTextColor),
+    );
+
     final lines = widget.text.split('\n');
     final isTooLong = widget.text.length > widget.maxChars || lines.length > 3;
 
     if (!isTooLong) {
-      return Text(widget.text, style: widget.style);
+      return Text(widget.text, style: effectiveStyle);
     }
 
     String displayText;
@@ -107,7 +114,7 @@ class _ExpandableTextWidgetState extends State<ExpandableTextWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(displayText, style: widget.style),
+        Text(displayText, style: effectiveStyle),
         const SizedBox(height: 3),
         GestureDetector(
           onTap: () => setState(() => _isExpanded = !_isExpanded),
@@ -116,8 +123,8 @@ class _ExpandableTextWidgetState extends State<ExpandableTextWidget> {
             child: Text(
               _isExpanded ? 'Thu gọn ▲' : 'Xem thêm ▼',
               style: TextStyle(
-                fontSize: widget.style.fontSize != null
-                    ? widget.style.fontSize! - 2
+                fontSize: effectiveStyle.fontSize != null
+                    ? effectiveStyle.fontSize! - 2
                     : 12,
                 fontWeight: FontWeight.bold,
                 color: primaryColor,
@@ -2729,14 +2736,24 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final primaryColor = theme.colorScheme.primary;
+    final cardBgColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade100;
+    final onSurfaceColor = theme.colorScheme.onSurface;
+    final secondaryTextColor = isDark ? Colors.white70 : Colors.black54;
+    final actionBtnColor = isDark ? Colors.white70 : Colors.grey.shade700;
 
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: SizedBox(
+      child: Container(
         height: MediaQuery.of(context).size.height * 0.78,
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
         child: Column(
           children: [
             const SizedBox(height: 8),
@@ -2744,15 +2761,19 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: isDark ? Colors.grey.shade600 : Colors.grey.shade300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.all(14.0),
+            Padding(
+              padding: const EdgeInsets.all(14.0),
               child: Text(
                 'Bình luận',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: onSurfaceColor,
+                ),
               ),
             ),
             const Divider(height: 1),
@@ -2764,11 +2785,11 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                 builder: (context, snapshot) {
                   final comments = snapshot.data ?? [];
                   if (comments.isEmpty) {
-                    return const Center(
+                    return Center(
                       child: Text(
                         'Chưa có bình luận nào.\nHãy là người đầu tiên viết bình luận!',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.black54),
+                        style: TextStyle(color: secondaryTextColor),
                       ),
                     );
                   }
@@ -2825,8 +2846,13 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                                     child: Container(
                                       padding: const EdgeInsets.all(10),
                                       decoration: BoxDecoration(
-                                        color: Colors.grey.shade100,
+                                        color: cardBgColor,
                                         borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: isDark
+                                              ? const Color(0xFF334155)
+                                              : Colors.transparent,
+                                        ),
                                       ),
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2847,18 +2873,20 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                                                       ),
                                                       child: Text(
                                                         c.authorName,
-                                                        style: const TextStyle(
+                                                        style: TextStyle(
                                                           fontWeight: FontWeight.bold,
                                                           fontSize: 13,
+                                                          color: onSurfaceColor,
                                                         ),
                                                       ),
                                                     ),
                                                     if (c.replyToName != null) ...[
-                                                      const Text(
+                                                      Text(
                                                         ' ➔ ',
                                                         style: TextStyle(
-                                                            fontSize: 11,
-                                                            color: Colors.black45),
+                                                          fontSize: 11,
+                                                          color: secondaryTextColor,
+                                                        ),
                                                       ),
                                                       Text(
                                                         '@${c.replyToName}',
@@ -2879,15 +2907,19 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                                                     timeAgo,
                                                     style: TextStyle(
                                                       fontSize: 10,
-                                                      color: Colors.grey.shade600,
+                                                      color: secondaryTextColor,
                                                     ),
                                                   ),
                                                   if (canManage)
                                                     InkWell(
                                                       onTap: () => _showCommentOptions(c),
-                                                      child: const Padding(
-                                                        padding: EdgeInsets.only(left: 6),
-                                                        child: Icon(Icons.more_horiz, size: 16, color: Colors.black54),
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.only(left: 6),
+                                                        child: Icon(
+                                                          Icons.more_horiz,
+                                                          size: 16,
+                                                          color: secondaryTextColor,
+                                                        ),
                                                       ),
                                                     ),
                                                 ],
@@ -2899,10 +2931,10 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                                             ExpandableTextWidget(
                                               text: c.text,
                                               maxChars: 85,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 14,
                                                 height: 1.35,
-                                                color: Colors.black87,
+                                                color: onSurfaceColor,
                                               ),
                                             ),
                                           ],
@@ -2960,14 +2992,14 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                                                 Icon(
                                                   Icons.thumb_up_alt_outlined,
                                                   size: 14,
-                                                  color: Colors.grey.shade700,
+                                                  color: actionBtnColor,
                                                 ),
                                                 const SizedBox(width: 4),
                                                 Text(
                                                   'Thích',
                                                   style: TextStyle(
                                                     fontSize: 11,
-                                                    color: Colors.grey.shade700,
+                                                    color: actionBtnColor,
                                                   ),
                                                 ),
                                               ],
@@ -2983,7 +3015,7 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                                             padding: const EdgeInsets.symmetric(
                                                 horizontal: 6, vertical: 2),
                                             decoration: BoxDecoration(
-                                              color: Colors.white,
+                                              color: isDark ? const Color(0xFF334155) : Colors.white,
                                               borderRadius: BorderRadius.circular(10),
                                               boxShadow: [
                                                 BoxShadow(
@@ -3002,9 +3034,10 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                                                 const SizedBox(width: 3),
                                                 Text(
                                                   '${c.totalReactions}',
-                                                  style: const TextStyle(
+                                                  style: TextStyle(
                                                     fontSize: 10,
                                                     fontWeight: FontWeight.bold,
+                                                    color: onSurfaceColor,
                                                   ),
                                                 ),
                                               ],
@@ -3030,14 +3063,14 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                                               Icon(
                                                 Icons.reply_rounded,
                                                 size: 14,
-                                                color: Colors.grey.shade700,
+                                                color: actionBtnColor,
                                               ),
                                               const SizedBox(width: 4),
                                               Text(
                                                 'Trả lời',
                                                 style: TextStyle(
                                                   fontSize: 11,
-                                                  color: Colors.grey.shade700,
+                                                  color: actionBtnColor,
                                                 ),
                                               ),
                                             ],
@@ -3063,7 +3096,7 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
             if (_replyingToComment != null) ...[
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                color: const Color(0xFFEEF2FF),
+                color: isDark ? const Color(0xFF1E1B4B) : const Color(0xFFEEF2FF),
                 child: Row(
                   children: [
                     Icon(Icons.reply_rounded, size: 16, color: primaryColor),
@@ -3091,7 +3124,7 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
             if (_editingComment != null) ...[
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                color: const Color(0xFFFEF3C7),
+                color: isDark ? const Color(0xFF451A03) : const Color(0xFFFEF3C7),
                 child: Row(
                   children: [
                     const Icon(Icons.edit_rounded, size: 16, color: Colors.amber),
@@ -3124,7 +3157,7 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
             if (_attachedImageFile != null) ...[
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                color: Colors.grey.shade100,
+                color: cardBgColor,
                 child: Row(
                   children: [
                     ClipRRect(
@@ -3140,7 +3173,11 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                     Expanded(
                       child: Text(
                         'Ảnh đính kèm: ${_attachedImageFile!.name}',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: onSurfaceColor,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -3156,7 +3193,7 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
             // THANH BIỂU CẢM EMOJI CHỌN NHANH
             Container(
               height: 36,
-              color: Colors.grey.shade50,
+              color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade50,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -3180,7 +3217,7 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.photo_camera_rounded, color: Colors.black54),
+                      icon: Icon(Icons.photo_camera_rounded, color: secondaryTextColor),
                       onPressed: _showPickImageSourceSheet,
                     ),
                     Expanded(
@@ -3188,6 +3225,7 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                         controller: _commentController,
                         focusNode: _focusNode,
                         autofocus: true,
+                        style: TextStyle(color: onSurfaceColor),
                         onSubmitted: (_) => _sendComment(),
                         decoration: InputDecoration(
                           hintText: _editingComment != null
@@ -3195,7 +3233,9 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                               : _replyingToComment != null
                                   ? 'Trả lời @${_replyingToComment!.authorName}...'
                                   : 'Viết bình luận công khai...',
+                          hintStyle: TextStyle(color: secondaryTextColor),
                           isDense: true,
+                          fillColor: cardBgColor,
                         ),
                       ),
                     ),

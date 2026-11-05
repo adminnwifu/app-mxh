@@ -256,17 +256,24 @@ class UserProfileDetailScreen extends StatelessWidget {
                       }).toList();
 
                       if (visiblePosts.isEmpty) {
-                        return const SliverToBoxAdapter(
-                          child: Padding(
-                            padding: EdgeInsets.all(32.0),
-                            child: Center(
-                              child: Text(
-                                'Chưa có bài viết nào được chia sẻ.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: Colors.black54),
+                        return Builder(
+                          builder: (context) {
+                            final isDark = Theme.of(context).brightness == Brightness.dark;
+                            return SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.all(32.0),
+                                child: Center(
+                                  child: Text(
+                                    'Chưa có bài viết nào được chia sẻ.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: isDark ? Colors.white70 : Colors.black54,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         );
                       }
 
@@ -291,18 +298,30 @@ class UserProfileDetailScreen extends StatelessWidget {
   }
 
   Widget _buildStatItem(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(color: Colors.black54, fontSize: 12),
-        ),
-      ],
+    return Builder(
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Column(
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.black54,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
