@@ -293,6 +293,7 @@ class _IncomingRequestsTabWidgetState extends State<_IncomingRequestsTabWidget>
                           onPressed: () =>
                               userService.rejectFriendRequest(req.requestId),
                           style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFF475569), width: 1.5),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
                               vertical: 8,

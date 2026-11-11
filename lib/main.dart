@@ -9,7 +9,8 @@ import 'features/profile/profile_screen.dart';
 import 'services/auth_service.dart';
 import 'services/notification_service.dart';
 
-final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.light);
+/// Chế độ giao diện mặc định MÀU ĐEN (ThemeMode.dark)
+final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.dark);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,8 +25,9 @@ class MiniSocialApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = const Color(0xFF6366F1); // Indigo
+    final primaryColor = const Color(0xFF6366F1); // Indigo Accent
     final secondaryColor = const Color(0xFFEC4899); // Pink Accent
+    final borderSide = const BorderSide(color: Color(0xFF475569), width: 1.5);
 
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: themeNotifier,
@@ -34,70 +36,16 @@ class MiniSocialApp extends StatelessWidget {
           title: 'MiniSocial',
           debugShowCheckedModeBanner: false,
           themeMode: currentMode,
-          theme: ThemeData(
-            useMaterial3: true,
-            brightness: Brightness.light,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: primaryColor,
-              primary: primaryColor,
-              secondary: secondaryColor,
-              surface: const Color(0xFFF8FAFC),
-              brightness: Brightness.light,
-            ),
-            scaffoldBackgroundColor: const Color(0xFFF1F5F9),
-            appBarTheme: const AppBarTheme(
-              centerTitle: false,
-              elevation: 0,
-              backgroundColor: Colors.white,
-              foregroundColor: Color(0xFF0F172A),
-              titleTextStyle: TextStyle(
-                color: Color(0xFF0F172A),
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+          // BỘ PHÓNG TO CỠ CHỮ TOÀN BỘ ỨNG DỤNG (+30% NỔI BẬT DỄ ĐỌC TỐI ĐA)
+          builder: (context, child) {
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: const TextScaler.linear(1.30),
               ),
-            ),
-            cardTheme: CardThemeData(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.grey.shade200),
-              ),
-              color: Colors.white,
-            ),
-            inputDecorationTheme: InputDecorationTheme(
-              filled: true,
-              fillColor: Colors.grey.shade100,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade300),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: primaryColor, width: 1.5),
-              ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            ),
-            filledButtonTheme: FilledButtonThemeData(
-              style: FilledButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-                textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-              ),
-            ),
-            navigationBarTheme: NavigationBarThemeData(
-              backgroundColor: Colors.white,
-              indicatorColor: primaryColor.withOpacity(0.12),
-              elevation: 8,
-              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-              height: 65,
-            ),
-          ),
+              child: child!,
+            );
+          },
+          // GIAO DIỆN MẶC ĐỊNH MÀU ĐEN SANG TRỌNG CÓ CỠ CHỮ TO RÕ NẾT
           darkTheme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.dark,
@@ -109,14 +57,22 @@ class MiniSocialApp extends StatelessWidget {
               surface: const Color(0xFF1E293B),
             ),
             scaffoldBackgroundColor: const Color(0xFF0F172A),
+            textTheme: const TextTheme(
+              bodyLarge: TextStyle(fontSize: 19),
+              bodyMedium: TextStyle(fontSize: 17),
+              bodySmall: TextStyle(fontSize: 15),
+              titleLarge: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+              titleMedium: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
+              titleSmall: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            ),
             appBarTheme: const AppBarTheme(
               centerTitle: false,
               elevation: 0,
-              backgroundColor: Color(0xFF1E293B),
+              backgroundColor: Color(0xFF0F172A),
               foregroundColor: Colors.white,
               titleTextStyle: TextStyle(
                 color: Colors.white,
-                fontSize: 20,
+                fontSize: 23,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -124,26 +80,36 @@ class MiniSocialApp extends StatelessWidget {
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: const BorderSide(color: Color(0xFF334155)),
+                side: const BorderSide(color: Color(0xFF334155), width: 1.5),
               ),
               color: const Color(0xFF1E293B),
             ),
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
-              fillColor: const Color(0xFF334155),
+              fillColor: const Color(0xFF1E293B),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF475569)),
+                borderSide: const BorderSide(color: Color(0xFF334155), width: 1.5),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: primaryColor, width: 1.5),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+            ),
+            outlinedButtonTheme: OutlinedButtonThemeData(
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                side: borderSide,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
             ),
             filledButtonTheme: FilledButtonThemeData(
               style: FilledButton.styleFrom(
@@ -151,7 +117,80 @@ class MiniSocialApp extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-                textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+              ),
+            ),
+            navigationBarTheme: NavigationBarThemeData(
+              backgroundColor: const Color(0xFF1E293B),
+              indicatorColor: primaryColor.withOpacity(0.25),
+              elevation: 8,
+              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+              height: 65,
+            ),
+          ),
+          theme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.dark,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: primaryColor,
+              primary: primaryColor,
+              secondary: secondaryColor,
+              surface: const Color(0xFF1E293B),
+              brightness: Brightness.dark,
+            ),
+            scaffoldBackgroundColor: const Color(0xFF0F172A),
+            textTheme: const TextTheme(
+              bodyLarge: TextStyle(fontSize: 19),
+              bodyMedium: TextStyle(fontSize: 17),
+              bodySmall: TextStyle(fontSize: 15),
+              titleLarge: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+              titleMedium: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
+              titleSmall: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            ),
+            appBarTheme: const AppBarTheme(
+              centerTitle: false,
+              elevation: 0,
+              backgroundColor: Color(0xFF0F172A),
+              foregroundColor: Colors.white,
+              titleTextStyle: TextStyle(
+                color: Colors.white,
+                fontSize: 23,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            cardTheme: CardThemeData(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: Color(0xFF334155), width: 1.5),
+              ),
+              color: const Color(0xFF1E293B),
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: const Color(0xFF1E293B),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFF334155), width: 1.5),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: primaryColor, width: 1.5),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+            ),
+            outlinedButtonTheme: OutlinedButtonThemeData(
+              style: OutlinedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                side: borderSide,
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ),
             navigationBarTheme: NavigationBarThemeData(
@@ -169,7 +208,7 @@ class MiniSocialApp extends StatelessWidget {
   }
 }
 
-/// Cổng kiểm tra trạng thái đăng nhập tự động (Hiển thị Màn hình Đăng nhập mặc định nếu chưa đăng nhập)
+/// Cổng kiểm tra trạng thái đăng nhập tự động
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
@@ -226,6 +265,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   @override
+  void dispose() {
+    NotificationService().stopListening();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
 
@@ -238,7 +283,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(0.2),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),

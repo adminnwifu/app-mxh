@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../main.dart';
 import '../../models/post_model.dart';
 import '../../models/user_model.dart';
@@ -6,6 +8,19 @@ import '../../services/auth_service.dart';
 import '../../services/post_service.dart';
 import '../../services/user_friend_service.dart';
 import '../feed/feed_screen.dart';
+
+/// Helper lấy ImageProvider thông minh từ URL mạng hoặc Tệp bộ nhớ điện thoại
+ImageProvider? getSmartImageProvider(String? pathOrUrl) {
+  if (pathOrUrl == null || pathOrUrl.isEmpty) return null;
+  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
+    return NetworkImage(pathOrUrl);
+  }
+  final file = File(pathOrUrl);
+  if (file.existsSync()) {
+    return FileImage(file);
+  }
+  return NetworkImage(pathOrUrl);
+}
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -144,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   'Chỉnh sửa ảnh đại diện',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-                subtitle: const Text('Cập nhật URL ảnh hoặc chọn ảnh đại diện mới'),
+                subtitle: const Text('Chọn ảnh từ thư viện máy hoặc chụp ảnh mới'),
                 onTap: () {
                   Navigator.pop(ctx);
                   _showEditAvatarDialog(context, user);
@@ -203,14 +218,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showEditAvatarDialog(BuildContext context, UserModel user) {
-    final avatarCtrl = TextEditingController(text: user.avatarUrl);
-    final presetAvatars = [
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400',
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400',
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400',
-    ];
+    XFile? pickedAvatarFile;
 
     showModalBottomSheet(
       context: context,
@@ -222,7 +230,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            final currentUrl = avatarCtrl.text.trim();
+            Future<void> pickImage(ImageSource source) async {
+              try {
+                final picker = ImagePicker();
+                final XFile? image = await picker.pickImage(
+                  source: source,
+                  imageQuality: 85,
+                );
+                if (image != null) {
+                  setModalState(() {
+                    pickedAvatarFile = image;
+                  });
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Không thể mở thư viện: $e')),
+                  );
+                }
+              }
+            }
 
             return Padding(
               padding: EdgeInsets.only(
@@ -268,93 +295,91 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         child: CircleAvatar(
                           radius: 54,
-                          backgroundImage: currentUrl.isNotEmpty
-                              ? NetworkImage(currentUrl)
-                              : null,
-                          child: currentUrl.isEmpty
+                          backgroundImage: pickedAvatarFile != null
+                              ? FileImage(File(pickedAvatarFile!.path)) as ImageProvider
+                              : getSmartImageProvider(user.avatarUrl),
+                          child: (pickedAvatarFile == null && user.avatarUrl.isEmpty)
                               ? const Icon(Icons.person, size: 54)
                               : null,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
 
-                    // URL INPUT FIELD
-                    TextField(
-                      controller: avatarCtrl,
-                      onChanged: (_) => setModalState(() {}),
-                      decoration: InputDecoration(
-                        labelText: 'Đường dẫn (URL) ảnh đại diện mới',
-                        hintText: 'https://example.com/avatar.jpg',
-                        prefixIcon: const Icon(Icons.link_rounded),
-                        suffixIcon: avatarCtrl.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear_rounded),
-                                onPressed: () {
-                                  avatarCtrl.clear();
-                                  setModalState(() {});
-                                },
-                              )
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // PRESET AVATARS SELECTION
-                    const Text(
-                      'Hoặc chọn ảnh đại diện gợi ý:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: Colors.black54,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 60,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: presetAvatars.length,
-                        separatorBuilder: (context, index) => const SizedBox(width: 12),
-                        itemBuilder: (context, index) {
-                          final url = presetAvatars[index];
-                          final isSelected = avatarCtrl.text == url;
-
-                          return GestureDetector(
-                            onTap: () {
-                              avatarCtrl.text = url;
-                              setModalState(() {});
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isSelected
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Colors.transparent,
-                                  width: 2.5,
-                                ),
-                              ),
-                              child: CircleAvatar(
-                                radius: 24,
-                                backgroundImage: NetworkImage(url),
+                    // CHỌN ẢNH TỪ ĐIỆN THOẠI HOẶC CHỤP ẢNH
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => pickImage(ImageSource.gallery),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
                               ),
                             ),
-                          );
-                        },
-                      ),
+                            icon: const Icon(Icons.photo_library_rounded, size: 18),
+                            label: const Text('Chọn ảnh', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => pickImage(ImageSource.camera),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                            ),
+                            icon: const Icon(Icons.photo_camera_rounded, size: 18),
+                            label: const Text('Camera', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
                     ),
+                    if (pickedAvatarFile != null) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade900.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.greenAccent),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_circle,
+                                color: Colors.greenAccent, size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Đã chọn ảnh: ${pickedAvatarFile!.name}',
+                                style: const TextStyle(fontSize: 12),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 24),
 
                     // SAVE BUTTON
                     FilledButton.icon(
                       onPressed: () async {
+                        final finalUrl = pickedAvatarFile != null
+                            ? pickedAvatarFile!.path
+                            : user.avatarUrl;
+
                         await UserFriendService().updateProfile(
                           uid: user.uid,
                           displayName: user.displayName,
                           bio: user.bio,
-                          avatarUrl: avatarCtrl.text.trim(),
+                          avatarUrl: finalUrl,
                         );
                         if (ctx.mounted) {
                           Navigator.pop(ctx);
@@ -381,15 +406,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showEditCoverDialog(BuildContext context, UserModel user) {
-    final coverCtrl = TextEditingController(text: user.coverUrl);
-    final presetCovers = [
-      'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800',
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800',
-      'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800',
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800',
-      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800',
-      '',
-    ];
+    XFile? pickedCoverFile;
 
     showModalBottomSheet(
       context: context,
@@ -401,7 +418,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            final currentCover = coverCtrl.text.trim();
+            Future<void> pickImage(ImageSource source) async {
+              try {
+                final picker = ImagePicker();
+                final XFile? image = await picker.pickImage(
+                  source: source,
+                  imageQuality: 85,
+                );
+                if (image != null) {
+                  setModalState(() {
+                    pickedCoverFile = image;
+                  });
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Không thể mở thư viện: $e')),
+                  );
+                }
+              }
+            }
 
             return Padding(
               padding: EdgeInsets.only(
@@ -438,7 +474,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
-                        height: 120,
+                        height: 130,
                         width: double.infinity,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
@@ -448,107 +484,98 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ],
                           ),
                         ),
-                        child: currentCover.isNotEmpty
-                            ? Image.network(
-                                currentCover,
+                        child: pickedCoverFile != null
+                            ? Image.file(
+                                File(pickedCoverFile!.path),
                                 fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Center(
-                                  child: Icon(Icons.broken_image,
-                                      color: Colors.white),
-                                ),
                               )
-                            : const Center(
-                                child: Text(
-                                  'Chưa có ảnh bìa',
-                                  style: TextStyle(color: Colors.white70),
-                                ),
-                              ),
+                            : (user.coverUrl.isNotEmpty
+                                ? buildSmartImage(user.coverUrl, fit: BoxFit.cover)
+                                : const Center(
+                                    child: Text(
+                                      'Chưa có ảnh bìa',
+                                      style: TextStyle(color: Colors.white70),
+                                    ),
+                                  )),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
 
-                    // URL INPUT FIELD
-                    TextField(
-                      controller: coverCtrl,
-                      onChanged: (_) => setModalState(() {}),
-                      decoration: InputDecoration(
-                        labelText: 'Đường dẫn (URL) ảnh bìa mới',
-                        hintText: 'https://example.com/cover.jpg',
-                        prefixIcon: const Icon(Icons.wallpaper_rounded),
-                        suffixIcon: coverCtrl.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear_rounded),
-                                onPressed: () {
-                                  coverCtrl.clear();
-                                  setModalState(() {});
-                                },
-                              )
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // PRESET COVERS
-                    const Text(
-                      'Hoặc chọn ảnh bìa gợi ý:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: Colors.black54,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 70,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: presetCovers.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(width: 10),
-                        itemBuilder: (context, index) {
-                          final url = presetCovers[index];
-                          final isSelected = coverCtrl.text == url;
-
-                          return GestureDetector(
-                            onTap: () {
-                              coverCtrl.text = url;
-                              setModalState(() {});
-                            },
-                            child: Container(
-                              width: 110,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Colors.transparent,
-                                  width: 3,
-                                ),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(5),
-                                child: Image.network(
-                                  url,
-                                  fit: BoxFit.cover,
-                                ),
+                    // CHỌN ẢNH BÌA TỪ ĐIỆN THOẠI HOẶC CHỤP ẢNH
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => pickImage(ImageSource.gallery),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
                               ),
                             ),
-                          );
-                        },
-                      ),
+                            icon: const Icon(Icons.photo_library_rounded, size: 18),
+                            label: const Text('Chọn ảnh', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => pickImage(ImageSource.camera),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                            ),
+                            icon: const Icon(Icons.photo_camera_rounded, size: 18),
+                            label: const Text('Camera', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
                     ),
+                    if (pickedCoverFile != null) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade900.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.greenAccent),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_circle,
+                                color: Colors.greenAccent, size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Đã chọn ảnh bìa: ${pickedCoverFile!.name}',
+                                style: const TextStyle(fontSize: 12),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 24),
 
                     // SAVE BUTTON
                     FilledButton.icon(
                       onPressed: () async {
+                        final finalUrl = pickedCoverFile != null
+                            ? pickedCoverFile!.path
+                            : user.coverUrl;
+
                         await UserFriendService().updateProfile(
                           uid: user.uid,
                           displayName: user.displayName,
                           bio: user.bio,
                           avatarUrl: user.avatarUrl,
-                          coverUrl: coverCtrl.text.trim(),
+                          coverUrl: finalUrl,
                         );
                         if (ctx.mounted) {
                           Navigator.pop(ctx);
@@ -592,13 +619,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: user.avatarUrl.isNotEmpty
-                    ? Image.network(
+                    ? buildSmartImage(
                         user.avatarUrl,
                         width: 260,
                         height: 260,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.person, size: 100),
                       )
                     : Container(
                         width: 200,
@@ -653,7 +678,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const Divider(),
 
-                  // THEME SWITCHER SECTION
                   ListTile(
                     leading: Icon(
                       currentMode == ThemeMode.dark
@@ -809,299 +833,239 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
-          body: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    // COVER PHOTO BANNER & AVATAR HEADER
-                    Stack(
-                      clipBehavior: Clip.none,
-                      alignment: Alignment.bottomCenter,
-                      children: [
-                        Stack(
-                          children: [
-                            Container(
-                              height: 150,
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Theme.of(context).colorScheme.primary,
-                                    const Color(0xFF818CF8),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                              ),
-                              child: user.coverUrl.isNotEmpty
-                                  ? Image.network(
-                                      user.coverUrl,
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
-                                      height: 150,
-                                      errorBuilder: (context, error, stackTrace) =>
-                                          const SizedBox.shrink(),
-                                    )
-                                  : null,
+          body: RefreshIndicator(
+            onRefresh: () async {
+              await Future.delayed(const Duration(milliseconds: 500));
+            },
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // COVER PHOTO & AVATAR SECTION
+                  Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.bottomCenter,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _showEditCoverDialog(context, user),
+                        child: Container(
+                          height: 160,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Theme.of(context).colorScheme.primary,
+                                const Color(0xFF818CF8),
+                              ],
                             ),
-                            Positioned(
-                              top: 12,
-                              right: 12,
-                              child: GestureDetector(
-                                onTap: () => _showEditCoverDialog(context, user),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.55),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: Colors.white.withOpacity(0.6),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: const Row(
+                          ),
+                          child: user.coverUrl.isNotEmpty
+                              ? buildSmartImage(user.coverUrl, fit: BoxFit.cover)
+                              : const Center(
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(
-                                        Icons.camera_alt_outlined,
-                                        size: 14,
-                                        color: Colors.white,
-                                      ),
-                                      SizedBox(width: 4),
+                                      Icon(Icons.add_a_photo_outlined,
+                                          color: Colors.white70, size: 18),
+                                      SizedBox(width: 6),
                                       Text(
-                                        'Sửa ảnh bìa',
+                                        'Thêm ảnh bìa',
                                         style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
+                                          color: Colors.white70,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: -46,
+                        child: GestureDetector(
+                          onTap: () => _showAvatarOptionsSheet(context, user),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).scaffoldBackgroundColor,
+                              shape: BoxShape.circle,
+                            ),
+                            child: CircleAvatar(
+                              radius: 46,
+                              backgroundImage: getSmartImageProvider(user.avatarUrl),
+                              child: user.avatarUrl.isEmpty
+                                  ? const Icon(Icons.person, size: 46)
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 54),
+
+                  // USER INFO
+                  Text(
+                    user.displayName,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    user.email,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white70
+                          : Colors.grey.shade600,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // BIO BOX
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF1E293B)
+                            : Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? const Color(0xFF334155)
+                              : Colors.grey.shade300,
+                        ),
+                      ),
+                      child: Text(
+                        user.bio.isNotEmpty
+                            ? user.bio
+                            : 'Thêm tiểu sử giới thiệu bản thân...',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white70
+                              : Colors.grey.shade800,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // EDIT PROFILE BUTTON
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showEditProfileDialog(context, user),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      label: const Text('Chỉnh sửa thông tin'),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // STATS ROW
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildStatItem('Bạn bè', '${user.friendIds.length}'),
+                            Container(
+                                height: 24,
+                                width: 1,
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? const Color(0xFF334155)
+                                    : Colors.grey.shade300),
+                            StreamBuilder<List<PostModel>>(
+                              stream: postService.getUserPostsStream(user.uid),
+                              builder: (context, postSnap) {
+                                final count = postSnap.data?.length ?? 0;
+                                return _buildStatItem('Bài viết', '$count');
+                              },
                             ),
                           ],
                         ),
-                        Positioned(
-                          bottom: -42,
-                          child: Stack(
-                            children: [
-                              GestureDetector(
-                                onTap: () => _showAvatarOptionsSheet(context, user),
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: CircleAvatar(
-                                    radius: 46,
-                                    backgroundImage: user.avatarUrl.isNotEmpty
-                                        ? NetworkImage(user.avatarUrl)
-                                        : null,
-                                    child: user.avatarUrl.isEmpty
-                                        ? const Icon(Icons.person, size: 46)
-                                        : null,
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: GestureDetector(
-                                  onTap: () => _showAvatarOptionsSheet(context, user),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.primary,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 2),
-                                    ),
-                                    child: const Icon(
-                                      Icons.camera_alt_rounded,
-                                      size: 14,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                    const SizedBox(height: 50),
+                  ),
+                  const SizedBox(height: 16),
 
-                    // USER NAME, EMAIL & JOINED TAG
-                    Text(
-                      user.displayName,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  const Divider(height: 24),
+
+                  // SECTION TITLE
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      'Bài viết của bạn',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      user.email,
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                    ),
-                    const SizedBox(height: 12),
+                  ),
+                  const SizedBox(height: 8),
 
-                    // BIO CARD
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: Builder(
-                        builder: (context) {
-                          final isDark = Theme.of(context).brightness == Brightness.dark;
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isDark ? const Color(0xFF334155) : Colors.grey.shade300,
+                  // USER'S POSTS STREAM
+                  StreamBuilder<List<PostModel>>(
+                    stream: postService.getUserPostsStream(user.uid),
+                    builder: (context, postSnap) {
+                      final posts = postSnap.data ?? [];
+                      if (posts.isEmpty) {
+                        return Builder(
+                          builder: (context) {
+                            final isDark = Theme.of(context).brightness == Brightness.dark;
+                            return Padding(
+                              padding: const EdgeInsets.all(32.0),
+                              child: Center(
+                                child: Text(
+                                  'Bạn chưa đăng bài viết nào.\nHãy chia sẻ khoảnh khắc đầu tiên!',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white70 : Colors.black54,
+                                  ),
+                                ),
                               ),
-                            ),
-                            child: Text(
-                              user.bio.isNotEmpty
-                                  ? user.bio
-                                  : 'Chưa có tiểu sử. Nhấn chỉnh sửa để cập nhật!',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontStyle: FontStyle.italic,
-                                color: isDark ? Colors.white70 : Colors.grey.shade800,
-                                fontSize: 13,
-                              ),
-                            ),
+                            );
+                          },
+                        );
+                      }
+
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: posts.length,
+                        itemBuilder: (context, index) {
+                          return PostCardWidget(
+                            post: posts[index],
+                            currentUser: user,
                           );
                         },
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // STATS ROW (Friends count, Posts count, Total Likes received)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: Card(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 12.0),
-                          child: StreamBuilder<List<PostModel>>(
-                            stream: postService.getUserPostsStream(user.uid),
-                            builder: (context, postSnap) {
-                              final posts = postSnap.data ?? [];
-                              final totalLikes = posts.fold<int>(
-                                  0, (sum, p) => sum + p.likes.length);
-
-                              return Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                children: [
-                                  _buildStatItem('Bài viết', '${posts.length}'),
-                                  Container(
-                                      height: 24,
-                                      width: 1,
-                                      color: Colors.grey.shade300),
-                                  _buildStatItem(
-                                      'Bạn bè', '${user.friendIds.length}'),
-                                  Container(
-                                      height: 24,
-                                      width: 1,
-                                      color: Colors.grey.shade300),
-                                  _buildStatItem('Lượt thích', '$totalLikes'),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // ACTION BUTTONS ROW
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () => _showEditProfileDialog(context, user),
-                              style: OutlinedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              icon: const Icon(Icons.edit_outlined, size: 18),
-                              label: const Text('Chỉnh sửa hồ sơ'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Divider(height: 32),
-
-                    // SECTION HEADER
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Bài viết của tôi',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
+                      );
+                    },
+                  ),
+                ],
               ),
-
-              // USER POSTS STREAM
-              StreamBuilder<List<PostModel>>(
-                stream: postService.getUserPostsStream(user.uid),
-                builder: (context, postSnap) {
-                  final myPosts = postSnap.data ?? [];
-                  if (myPosts.isEmpty) {
-                    return Builder(
-                      builder: (context) {
-                        final isDark = Theme.of(context).brightness == Brightness.dark;
-                        return SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.all(32.0),
-                            child: Center(
-                              child: Text(
-                                'Bạn chưa đăng bài viết nào.\nHãy chia sẻ suy nghĩ của bạn trên Trang chủ!',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: isDark ? Colors.white70 : Colors.black54,
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  }
-                  return SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) => PostCardWidget(
-                        post: myPosts[index],
-                        currentUser: user,
-                      ),
-                      childCount: myPosts.length,
-                    ),
-                  );
-                },
-              ),
-            ],
+            ),
           ),
         );
       },

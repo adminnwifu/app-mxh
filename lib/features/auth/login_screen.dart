@@ -166,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             const Text(
               'Nhập email của bạn để nhận liên kết khôi phục mật khẩu.',
-              style: TextStyle(fontSize: 13, color: Colors.black54),
+              style: TextStyle(fontSize: 13, color: Colors.white70),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -215,9 +215,10 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -273,9 +274,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           ? 'Mạng xã hội kết nối bạn bè & gia đình'
                           : 'Đăng ký tài khoản trải nghiệm ngay',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: Colors.black54,
+                        color: isDark ? Colors.white70 : Colors.black54,
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -284,7 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Row(
@@ -300,12 +301,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 duration: const Duration(milliseconds: 200),
                                 padding: const EdgeInsets.symmetric(vertical: 10),
                                 decoration: BoxDecoration(
-                                  color: _isLoginMode ? Colors.white : Colors.transparent,
+                                  color: _isLoginMode
+                                      ? (isDark ? const Color(0xFF334155) : Colors.white)
+                                      : Colors.transparent,
                                   borderRadius: BorderRadius.circular(10),
                                   boxShadow: _isLoginMode
                                       ? [
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(0.06),
+                                            color: Colors.black.withOpacity(0.1),
                                             blurRadius: 6,
                                           )
                                         ]
@@ -320,7 +323,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         : FontWeight.normal,
                                     color: _isLoginMode
                                         ? primaryColor
-                                        : Colors.grey.shade600,
+                                        : (isDark ? Colors.white70 : Colors.grey.shade600),
                                   ),
                                 ),
                               ),
@@ -337,12 +340,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 duration: const Duration(milliseconds: 200),
                                 padding: const EdgeInsets.symmetric(vertical: 10),
                                 decoration: BoxDecoration(
-                                  color: !_isLoginMode ? Colors.white : Colors.transparent,
+                                  color: !_isLoginMode
+                                      ? (isDark ? const Color(0xFF334155) : Colors.white)
+                                      : Colors.transparent,
                                   borderRadius: BorderRadius.circular(10),
                                   boxShadow: !_isLoginMode
                                       ? [
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(0.06),
+                                            color: Colors.black.withOpacity(0.1),
                                             blurRadius: 6,
                                           )
                                         ]
@@ -357,7 +362,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         : FontWeight.normal,
                                     color: !_isLoginMode
                                         ? primaryColor
-                                        : Colors.grey.shade600,
+                                        : (isDark ? Colors.white70 : Colors.grey.shade600),
                                   ),
                                 ),
                               ),

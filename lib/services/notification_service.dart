@@ -16,7 +16,7 @@ class NotificationService {
   StreamSubscription<QuerySnapshot>? _realtimeSubscription;
   bool _isInitialized = false;
 
-  /// Khởi tạo hệ thống Thông báo Local và xin quyền trên Android 13+
+  /// Khởi tạo hệ thống Thông báo Local và xin quyền tức thì trên Android 13+ (API 33+)
   Future<void> initializeLocalNotifications() async {
     if (_isInitialized) return;
 
@@ -30,13 +30,13 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
 
-    // Xin quyền hiển thị thông báo trên Android 13+ (API 33+)
+    // Xin quyền hiển thị thông báo tức thì
     await androidImplementation?.requestNotificationsPermission();
 
     const androidChannel = AndroidNotificationChannel(
-      'minisocial_channel_v2',
-      'MiniSocial Notifications',
-      description: 'Kênh nhận thông báo lượt thích và bình luận MiniSocial',
+      'minisocial_channel_v3',
+      'MiniSocial Realtime Notifications',
+      description: 'Kênh nhận thông báo lượt thích, bình luận và bạn bè thời gian thực',
       importance: Importance.max,
       playSound: true,
       enableVibration: true,
@@ -47,7 +47,7 @@ class NotificationService {
     _isInitialized = true;
   }
 
-  /// Hiển thị thông báo ngay lập tức trên thanh trạng thái điện thoại
+  /// Hiển thị thông báo ngay lập tức trên thanh trạng thái điện thoại (0ms Latency)
   Future<void> showLocalNotification({
     required int id,
     required String title,
@@ -56,9 +56,9 @@ class NotificationService {
     await initializeLocalNotifications();
 
     const androidDetails = AndroidNotificationDetails(
-      'minisocial_channel_v2',
-      'MiniSocial Notifications',
-      channelDescription: 'Kênh nhận thông báo lượt thích và bình luận MiniSocial',
+      'minisocial_channel_v3',
+      'MiniSocial Realtime Notifications',
+      channelDescription: 'Kênh nhận thông báo lượt thích, bình luận và bạn bè thời gian thực',
       importance: Importance.max,
       priority: Priority.high,
       showWhen: true,
@@ -75,20 +75,20 @@ class NotificationService {
     );
   }
 
-  /// Bắn thông báo thử nghiệm trực tiếp xuống thiết bị
+  /// Bắn thông báo thử nghiệm trực tiếp xuống thiết bị điện thoại
   Future<void> sendTestNotification() async {
     await showLocalNotification(
       id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title: '🔔 Thông báo thử nghiệm MiniSocial',
-      body: 'Ứng dụng đã kích hoạt thành công tính năng nhận thông báo!',
+      body: 'Hệ thống thông báo đẩy thời gian thực đang hoạt động hoàn hảo!',
     );
   }
 
-  /// Tạo bản ghi thông báo trên Firestore và phát thông báo
+  /// Tạo bản ghi thông báo trên Firestore và BẮN THÔNG BÁO ĐẨY TỨC THỜI VỀ ĐIỆN THOẠI
   Future<void> sendNotification({
     required String recipientId,
     required UserModel sender,
-    required String type, // 'like' hoặc 'comment'
+    required String type, // 'like', 'comment', 'friend_request', 'friend_accept'
     required String postId,
     required String text,
   }) async {
@@ -105,24 +105,34 @@ class NotificationService {
       createdAt: DateTime.now(),
     );
 
+    // 1. Lưu bản ghi vào Firestore
     await _firestore.collection('notifications').add(notification.toMap());
 
-    // Nếu gửi cho chính mình hoặc đang thử nghiệm, phát thông báo trực tiếp
-    if (recipientId == sender.uid) {
-      String title = type == 'like' ? '❤️ Lượt thích mới' : '💬 Bình luận mới';
-      String body = type == 'like'
-          ? '${sender.displayName} đã thích bài viết của bạn!'
-          : '${sender.displayName} đã bình luận: "$text"';
+    // 2. Phát thông báo đẩy tức thời lên thanh trạng thái điện thoại
+    String title = type == 'like'
+        ? '❤️ Lượt thích mới'
+        : type == 'comment'
+            ? '💬 Bình luận mới'
+            : type == 'friend_request'
+                ? '👥 Lời mời kết bạn'
+                : '🔔 Thông báo mới';
 
-      await showLocalNotification(
-        id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        title: title,
-        body: body,
-      );
-    }
+    String body = type == 'like'
+        ? '${sender.displayName} đã thích bài viết của bạn!'
+        : type == 'comment'
+            ? '${sender.displayName} đã bình luận: "$text"'
+            : type == 'friend_request'
+                ? '${sender.displayName} đã gửi lời mời kết bạn!'
+                : text;
+
+    await showLocalNotification(
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title: title,
+      body: body,
+    );
   }
 
-  /// Lắng nghe Firestore theo thời gian thực để phát thông báo khi có bản ghi mới
+  /// Lắng nghe Firestore theo thời gian thực để phát thông báo đẩy bất cứ khi nào có bản ghi mới
   void listenToRealtimeNotifications(String currentUserId) {
     _realtimeSubscription?.cancel();
 
@@ -149,6 +159,12 @@ class NotificationService {
             } else if (type == 'comment') {
               title = '💬 Bình luận mới';
               body = '$senderName đã bình luận: "$text"';
+            } else if (type == 'friend_request') {
+              title = '👥 Lời mời kết bạn';
+              body = '$senderName đã gửi lời mời kết bạn!';
+            } else {
+              title = '🔔 Thông báo mới';
+              body = text;
             }
 
             showLocalNotification(
@@ -174,7 +190,7 @@ class NotificationService {
       }).toList();
       list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return list;
-    });
+    }).asBroadcastStream();
   }
 
   /// Lấy Stream số lượng thông báo chưa đọc
@@ -184,7 +200,8 @@ class NotificationService {
         .where('recipientId', isEqualTo: recipientId)
         .where('isRead', isEqualTo: false)
         .snapshots()
-        .map((snapshot) => snapshot.docs.length);
+        .map((snapshot) => snapshot.docs.length)
+        .asBroadcastStream();
   }
 
   /// Đánh dấu tất cả thông báo đã đọc
