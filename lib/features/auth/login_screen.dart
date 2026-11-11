@@ -244,7 +244,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: primaryColor.withOpacity(0.3),
+                              color: primaryColor.withValues(alpha: 0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -308,7 +308,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   boxShadow: _isLoginMode
                                       ? [
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(0.1),
+                                            color: Colors.black.withValues(alpha: 0.1),
                                             blurRadius: 6,
                                           )
                                         ]
@@ -347,7 +347,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   boxShadow: !_isLoginMode
                                       ? [
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(0.1),
+                                            color: Colors.black.withValues(alpha: 0.1),
                                             blurRadius: 6,
                                           )
                                         ]
@@ -501,7 +501,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         elevation: 2,
-                        shadowColor: primaryColor.withOpacity(0.4),
+                        shadowColor: primaryColor.withValues(alpha: 0.4),
                       ),
                       child: _isLoading
                           ? const SizedBox(

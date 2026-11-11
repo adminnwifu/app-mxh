@@ -157,270 +157,17 @@ class FeedScreen extends StatelessWidget {
     );
   }
 
-  /// Dialog Tạo bài viết mới với tính năng chọn ảnh từ Thư viện điện thoại
+  /// Modal Tạo bài viết mới với tính năng chọn ảnh từ Thư viện điện thoại
   void _showCreatePostDialog(BuildContext context, UserModel currentUser) {
-    final contentController = TextEditingController();
-    String selectedVisibility = 'public';
-    XFile? pickedPostImage;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final theme = Theme.of(context);
-            final isDark = theme.brightness == Brightness.dark;
-            final onSurfaceColor = isDark ? Colors.white : const Color(0xFF0F172A);
-            final secondaryTextColor = isDark ? Colors.white70 : Colors.black54;
-            final pillBgColor = isDark ? const Color(0xFF1E293B) : Colors.grey.shade100;
-            final pillBorderColor = isDark ? const Color(0xFF334155) : Colors.grey.shade300;
-
-            Future<void> pickPostImage(ImageSource source) async {
-              try {
-                final picker = ImagePicker();
-                final XFile? image = await picker.pickImage(
-                  source: source,
-                  imageQuality: 85,
-                );
-                if (image != null) {
-                  setDialogState(() {
-                    pickedPostImage = image;
-                  });
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Không thể mở thư viện: $e')),
-                  );
-                }
-              }
-            }
-
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                left: 16,
-                right: 16,
-                top: 16,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Tạo bài viết mới',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: onSurfaceColor,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          icon: Icon(Icons.close, color: onSurfaceColor),
-                        ),
-                      ],
-                    ),
-                    const Divider(),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: CircleAvatar(
-                        radius: 22,
-                        backgroundImage: currentUser.avatarUrl.isNotEmpty
-                            ? NetworkImage(currentUser.avatarUrl)
-                            : null,
-                        child: currentUser.avatarUrl.isEmpty
-                            ? const Icon(Icons.person)
-                            : null,
-                      ),
-                      title: Text(
-                        currentUser.displayName,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: onSurfaceColor,
-                        ),
-                      ),
-                      subtitle: PopupMenuButton<String>(
-                        initialValue: selectedVisibility,
-                        onSelected: (val) {
-                          setDialogState(() => selectedVisibility = val);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: pillBgColor,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: pillBorderColor),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                selectedVisibility == 'public'
-                                    ? Icons.public
-                                    : selectedVisibility == 'friends'
-                                        ? Icons.group
-                                        : Icons.lock,
-                                size: 14,
-                                color: secondaryTextColor,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                selectedVisibility == 'public'
-                                    ? 'Công khai'
-                                    : selectedVisibility == 'friends'
-                                        ? 'Bạn bè'
-                                        : 'Chỉ mình tôi',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: secondaryTextColor,
-                                ),
-                              ),
-                              Icon(Icons.arrow_drop_down,
-                                  size: 18, color: secondaryTextColor),
-                            ],
-                          ),
-                        ),
-                        itemBuilder: (_) => const [
-                          PopupMenuItem(
-                            value: 'public',
-                            child: Row(
-                              children: [
-                                Icon(Icons.public, size: 18, color: Colors.blueAccent),
-                                SizedBox(width: 8),
-                                Text('Công khai'),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'friends',
-                            child: Row(
-                              children: [
-                                Icon(Icons.group, size: 18, color: Colors.green),
-                                SizedBox(width: 8),
-                                Text('Bạn bè'),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'private',
-                            child: Row(
-                              children: [
-                                Icon(Icons.lock, size: 18, color: Colors.redAccent),
-                                SizedBox(width: 8),
-                                Text('Chỉ mình tôi'),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: contentController,
-                      maxLines: 4,
-                      autofocus: true,
-                      style: TextStyle(
-                        fontSize: 16,
-                        height: 1.4,
-                        color: onSurfaceColor,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Bạn đang nghĩ gì thế?',
-                        hintStyle: TextStyle(
-                          color: isDark ? Colors.white54 : Colors.grey.shade500,
-                        ),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        fillColor: Colors.transparent,
-                      ),
-                    ),
-
-                    // PREVIEW ẢNH ĐƯỢC CHỌN TỪ ĐIỆN THOẠI
-                    if (pickedPostImage != null) ...[
-                      const SizedBox(height: 8),
-                      Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.file(
-                              File(pickedPostImage!.path),
-                              height: 180,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: CircleAvatar(
-                              backgroundColor: Colors.black.withOpacity(0.6),
-                              radius: 16,
-                              child: IconButton(
-                                icon: const Icon(Icons.close, size: 16, color: Colors.white),
-                                onPressed: () => setDialogState(() => pickedPostImage = null),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-
-                    const SizedBox(height: 12),
-                    // THANH NÚT CHỌN ẢNH TỪ MÁY
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => pickPostImage(ImageSource.gallery),
-                            icon: const Icon(Icons.photo_library_rounded, size: 18),
-                            label: const Text('Thêm ảnh từ máy'),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton.outlined(
-                          onPressed: () => pickPostImage(ImageSource.camera),
-                          icon: const Icon(Icons.photo_camera_rounded, size: 18),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      onPressed: () async {
-                        final text = contentController.text.trim();
-                        if (text.isEmpty && pickedPostImage == null) return;
-
-                        await PostService().createPost(
-                          author: currentUser,
-                          content: text.isEmpty && pickedPostImage != null
-                              ? 'Đã chia sẻ một hình ảnh'
-                              : text,
-                          visibility: selectedVisibility,
-                        );
-                        if (ctx.mounted) Navigator.pop(ctx);
-                      },
-                      child: const Text('Đăng bài ngay'),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
+      builder: (_) => _CreatePostModalSheet(currentUser: currentUser),
     );
   }
 
@@ -691,7 +438,7 @@ class FeedScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.12),
+              color: Colors.black.withValues(alpha: 0.12),
               blurRadius: 6,
               offset: const Offset(0, 3),
             ),
@@ -782,7 +529,7 @@ class FeedScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 6,
               offset: const Offset(0, 3),
             ),
@@ -817,7 +564,7 @@ class FeedScreen extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.4),
+                        color: Colors.black.withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: Colors.white24),
                       ),
@@ -1139,7 +886,7 @@ class _StoryViewerInteractiveSheetState
                                   ? Colors.white
                                   : isCurrent
                                       ? (_isPaused ? Colors.amber : Colors.white)
-                                      : Colors.white.withOpacity(0.3),
+                                      : Colors.white.withValues(alpha: 0.3),
                               borderRadius: BorderRadius.circular(2),
                             ),
                           ),
@@ -1229,7 +976,7 @@ class _StoryViewerInteractiveSheetState
                         height: 44,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
+                          color: Colors.black.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(color: Colors.white38),
                         ),
@@ -1461,7 +1208,7 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
                         decoration: BoxDecoration(
                           color: _selectedMode == 0
                               ? primaryColor
-                              : Colors.white.withOpacity(0.1),
+                              : Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: _selectedMode == 0
@@ -1497,7 +1244,7 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
                         decoration: BoxDecoration(
                           color: _selectedMode == 1
                               ? primaryColor
-                              : Colors.white.withOpacity(0.1),
+                              : Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: _selectedMode == 1
@@ -1672,7 +1419,7 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.green.shade900.withOpacity(0.5),
+                            color: Colors.green.shade900.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(color: Colors.greenAccent),
                           ),
@@ -1714,7 +1461,7 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
                         labelStyle: const TextStyle(color: Colors.white70),
                         prefixIcon: const Icon(Icons.title, color: Colors.white70),
                         filled: true,
-                        fillColor: Colors.white.withOpacity(0.08),
+                        fillColor: Colors.white.withValues(alpha: 0.08),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -1723,6 +1470,321 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CreatePostModalSheet extends StatefulWidget {
+  final UserModel currentUser;
+
+  const _CreatePostModalSheet({required this.currentUser});
+
+  @override
+  State<_CreatePostModalSheet> createState() => _CreatePostModalSheetState();
+}
+
+class _CreatePostModalSheetState extends State<_CreatePostModalSheet> {
+  final _contentController = TextEditingController();
+  final _focusNode = FocusNode();
+  String _selectedVisibility = 'public';
+  XFile? _pickedPostImage;
+  bool _isPublishing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 150), () {
+      if (mounted) {
+        _focusNode.requestFocus();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _contentController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickPostImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: source,
+        imageQuality: 85,
+      );
+      if (image != null) {
+        setState(() {
+          _pickedPostImage = image;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể mở thư viện: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _publishPost() async {
+    final text = _contentController.text.trim();
+    if ((text.isEmpty && _pickedPostImage == null) || _isPublishing) return;
+
+    setState(() => _isPublishing = true);
+
+    await PostService().createPost(
+      author: widget.currentUser,
+      content: text.isEmpty && _pickedPostImage != null
+          ? 'Đã chia sẻ một hình ảnh'
+          : text,
+      visibility: _selectedVisibility,
+    );
+
+    if (mounted) {
+      Navigator.pop(context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final onSurfaceColor = theme.colorScheme.onSurface;
+    final secondaryTextColor = isDark ? Colors.white70 : Colors.black54;
+    final pillBgColor = isDark ? const Color(0xFF334155) : Colors.grey.shade100;
+    final pillBorderColor = isDark ? const Color(0xFF475569) : Colors.grey.shade300;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey.shade600 : Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Tạo bài viết mới',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: onSurfaceColor,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.close, color: onSurfaceColor),
+                  ),
+                ],
+              ),
+              const Divider(),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(
+                  radius: 22,
+                  backgroundImage: widget.currentUser.avatarUrl.isNotEmpty
+                      ? NetworkImage(widget.currentUser.avatarUrl)
+                      : null,
+                  child: widget.currentUser.avatarUrl.isEmpty
+                      ? const Icon(Icons.person)
+                      : null,
+                ),
+                title: Text(
+                  widget.currentUser.displayName,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: onSurfaceColor,
+                  ),
+                ),
+                subtitle: PopupMenuButton<String>(
+                  initialValue: _selectedVisibility,
+                  onSelected: (val) {
+                    setState(() => _selectedVisibility = val);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: pillBgColor,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: pillBorderColor),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _selectedVisibility == 'public'
+                              ? Icons.public
+                              : _selectedVisibility == 'friends'
+                                  ? Icons.group
+                                  : Icons.lock,
+                          size: 14,
+                          color: secondaryTextColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _selectedVisibility == 'public'
+                              ? 'Công khai'
+                              : _selectedVisibility == 'friends'
+                                  ? 'Bạn bè'
+                                  : 'Chỉ mình tôi',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: secondaryTextColor,
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down,
+                            size: 18, color: secondaryTextColor),
+                      ],
+                    ),
+                  ),
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(
+                      value: 'public',
+                      child: Row(
+                        children: [
+                          Icon(Icons.public, size: 18, color: Colors.blueAccent),
+                          SizedBox(width: 8),
+                          Text('Công khai'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'friends',
+                      child: Row(
+                        children: [
+                          Icon(Icons.group, size: 18, color: Colors.green),
+                          SizedBox(width: 8),
+                          Text('Bạn bè'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'private',
+                      child: Row(
+                        children: [
+                          Icon(Icons.lock, size: 18, color: Colors.redAccent),
+                          SizedBox(width: 8),
+                          Text('Chỉ mình tôi'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _contentController,
+                focusNode: _focusNode,
+                maxLines: 4,
+                autofocus: true,
+                style: TextStyle(
+                  fontSize: 16,
+                  height: 1.4,
+                  color: onSurfaceColor,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Bạn đang nghĩ gì thế?',
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.white54 : Colors.grey.shade500,
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  fillColor: Colors.transparent,
+                ),
+              ),
+
+              // PREVIEW ẢNH ĐƯỢC CHỌN TỪ ĐIỆN THOẠI
+              if (_pickedPostImage != null) ...[
+                const SizedBox(height: 8),
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        File(_pickedPostImage!.path),
+                        height: 180,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: CircleAvatar(
+                        backgroundColor: Colors.black.withOpacity(0.6),
+                        radius: 16,
+                        child: IconButton(
+                          icon: const Icon(Icons.close, size: 16, color: Colors.white),
+                          onPressed: () => setState(() => _pickedPostImage = null),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+
+              const SizedBox(height: 12),
+              // THANH NÚT CHỌN ẢNH TỪ MÁY
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _pickPostImage(ImageSource.gallery),
+                      icon: const Icon(Icons.photo_library_rounded, size: 18),
+                      label: const Text('Thêm ảnh từ máy'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton.outlined(
+                    onPressed: () => _pickPostImage(ImageSource.camera),
+                    icon: const Icon(Icons.photo_camera_rounded, size: 18),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: _isPublishing ? null : _publishPost,
+                child: _isPublishing
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Đăng bài ngay'),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
@@ -2116,26 +2178,26 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                     onTap: () => _showShareOptionsSheet(context),
                     borderRadius: BorderRadius.circular(8),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.share_outlined,
-                            color: Colors.white70,
-                            size: 20,
+                            color: Colors.grey.shade700,
+                            size: 18,
                           ),
-                          const SizedBox(width: 6),
-                          const Text(
-                            'Chia sẻ',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.white,
-                            ),
-                          ),
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey.shade700,
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'Chia sẻ',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
                             ),
                           ),
                         ],

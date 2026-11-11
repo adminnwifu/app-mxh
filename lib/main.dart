@@ -122,7 +122,7 @@ class MiniSocialApp extends StatelessWidget {
             ),
             navigationBarTheme: NavigationBarThemeData(
               backgroundColor: const Color(0xFF1E293B),
-              indicatorColor: primaryColor.withOpacity(0.25),
+              indicatorColor: primaryColor.withValues(alpha: 0.25),
               elevation: 8,
               labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
               height: 65,
@@ -195,7 +195,7 @@ class MiniSocialApp extends StatelessWidget {
             ),
             navigationBarTheme: NavigationBarThemeData(
               backgroundColor: const Color(0xFF1E293B),
-              indicatorColor: primaryColor.withOpacity(0.25),
+              indicatorColor: primaryColor.withValues(alpha: 0.25),
               elevation: 8,
               labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
               height: 65,
@@ -283,7 +283,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
