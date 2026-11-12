@@ -38,17 +38,7 @@ class MiniSocialApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           themeMode: currentMode,
 
-          // BỘ PHÓNG TO CỠ CHỮ TOÀN BỘ ỨNG DỤNG HỖ TRỢ CỠ CHỮ 26PT RÕ NẾT
-          builder: (context, child) {
-            return MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                textScaler: const TextScaler.linear(1.25),
-              ),
-              child: child!,
-            );
-          },
-
-          // 1. GIAO DIỆN SÁNG CHUẨN (Light Theme)
+          // 1. GIAO DIỆN SÁNG CHUẨN NATIVE
           theme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.light,
@@ -60,12 +50,12 @@ class MiniSocialApp extends StatelessWidget {
             ),
             scaffoldBackgroundColor: const Color(0xFFF8FAFC),
             textTheme: const TextTheme(
-              bodyLarge: TextStyle(fontSize: 26),
-              bodyMedium: TextStyle(fontSize: 24),
-              bodySmall: TextStyle(fontSize: 20),
-              titleLarge: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              titleMedium: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-              titleSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              bodyLarge: TextStyle(fontSize: 16),
+              bodyMedium: TextStyle(fontSize: 15),
+              bodySmall: TextStyle(fontSize: 13),
+              titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              titleMedium: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              titleSmall: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             appBarTheme: const AppBarTheme(
               centerTitle: false,
@@ -74,13 +64,13 @@ class MiniSocialApp extends StatelessWidget {
               foregroundColor: Colors.black87,
               titleTextStyle: TextStyle(
                 color: Colors.black87,
-                fontSize: 26,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
 
-          // 2. GIAO DIỆN TỐI CHUẨN (Dark Theme Cỡ Chữ 26pt Rõ Nét)
+          // 2. GIAO DIỆN TỐI CHUẨN ĐẸP MẮT (Dark Theme Cân Bằng Cỡ Chữ)
           darkTheme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.dark,
@@ -93,12 +83,12 @@ class MiniSocialApp extends StatelessWidget {
             ),
             scaffoldBackgroundColor: const Color(0xFF0F172A),
             textTheme: const TextTheme(
-              bodyLarge: TextStyle(fontSize: 26),
-              bodyMedium: TextStyle(fontSize: 24),
-              bodySmall: TextStyle(fontSize: 20),
-              titleLarge: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              titleMedium: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-              titleSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              bodyLarge: TextStyle(fontSize: 16),
+              bodyMedium: TextStyle(fontSize: 15),
+              bodySmall: TextStyle(fontSize: 13),
+              titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              titleMedium: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              titleSmall: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             appBarTheme: const AppBarTheme(
               centerTitle: false,
@@ -107,7 +97,7 @@ class MiniSocialApp extends StatelessWidget {
               foregroundColor: Colors.white,
               titleTextStyle: TextStyle(
                 color: Colors.white,
-                fontSize: 26,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -134,7 +124,7 @@ class MiniSocialApp extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: primaryColor, width: 1.5),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             ),
             outlinedButtonTheme: OutlinedButtonThemeData(
               style: OutlinedButton.styleFrom(
@@ -143,7 +133,7 @@ class MiniSocialApp extends StatelessWidget {
                 ),
                 side: borderSide,
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
             ),
             filledButtonTheme: FilledButtonThemeData(
@@ -152,7 +142,7 @@ class MiniSocialApp extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-                textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
             ),
             navigationBarTheme: NavigationBarThemeData(
