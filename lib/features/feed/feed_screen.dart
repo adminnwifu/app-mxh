@@ -690,79 +690,94 @@ class _StoryViewerInteractiveSheetState
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8),
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
+        return MediaQuery(
+          data: MediaQuery.of(ctx).copyWith(
+            textScaler: const TextScaler.linear(1.0),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              if (isAuthor) ...[
+                const SizedBox(height: 12),
+                if (isAuthor) ...[
+                  ListTile(
+                    dense: true,
+                    leading: const Icon(Icons.delete_outline_rounded,
+                        color: Colors.redAccent, size: 20),
+                    title: const Text(
+                      'Xóa tin này',
+                      style: TextStyle(
+                        color: Colors.redAccent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    subtitle: const Text(
+                      'Tin sẽ bị gỡ bỏ khỏi trang chủ ngay lập tức',
+                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                    ),
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      Navigator.pop(modalCtx);
+                      await StoryService().deleteStory(story.storyId);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('🗑️ Đã xóa tin thành công!'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  const Divider(color: Colors.white12, height: 1),
+                ],
                 ListTile(
-                  leading: const Icon(Icons.delete_outline_rounded,
-                      color: Colors.redAccent),
+                  dense: true,
+                  leading: const Icon(Icons.copy_rounded, color: Colors.white70, size: 20),
                   title: const Text(
-                    'Xóa tin này',
-                    style: TextStyle(
-                        color: Colors.redAccent, fontWeight: FontWeight.bold),
+                    'Sao chép nội dung tin',
+                    style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
                   ),
-                  subtitle: const Text(
-                    'Tin sẽ bị gỡ bỏ khỏi trang chủ ngay lập tức',
-                    style: TextStyle(color: Colors.white54, fontSize: 11),
-                  ),
-                  onTap: () async {
+                  onTap: () {
                     Navigator.pop(ctx);
-                    Navigator.pop(modalCtx);
-                    await StoryService().deleteStory(story.storyId);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('🗑️ Đã xóa tin thành công!'),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Đã sao chép nội dung tin!'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
                   },
                 ),
-                const Divider(color: Colors.white12),
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.flag_outlined, color: Colors.white70, size: 20),
+                  title: const Text(
+                    'Báo cáo tin xấu',
+                    style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Đã gửi báo cáo tin tới quản trị viên.'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 8),
               ],
-              ListTile(
-                leading: const Icon(Icons.copy_rounded, color: Colors.white70),
-                title: const Text('Sao chép nội dung tin',
-                    style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Đã sao chép nội dung tin!'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.flag_outlined, color: Colors.white70),
-                title: const Text('Báo cáo tin xấu',
-                    style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Đã gửi báo cáo tin tới quản trị viên.'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 8),
-            ],
+            ),
           ),
         );
       },
