@@ -1289,93 +1289,107 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // LIVE STUDIO CANVAS PREVIEW
-                    Container(
-                      height: 220,
-                      decoration: BoxDecoration(
-                        color: Colors.black26,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.white24),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: Stack(
-                          children: [
-                            if (_selectedMode == 0) ...[
-                              Positioned.fill(
-                                child: _pickedImageFile != null
-                                    ? Image.file(
-                                        File(_pickedImageFile!.path),
-                                        fit: BoxFit.cover,
-                                      )
-                                    : Container(
-                                        color: const Color(0xFF334155),
-                                        child: const Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.add_a_photo_rounded,
-                                                color: Colors.white54, size: 48),
-                                            SizedBox(height: 8),
-                                            Text(
-                                              'Chưa chọn ảnh nào.\nBấm "Chọn ảnh từ máy" bên dưới',
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                  color: Colors.white54, fontSize: 12),
+                    // LIVE STUDIO CANVAS PREVIEW WITH VALUELISTENABLEBUILDER (HỖ TRỢ GÕ TIẾNG VIỆT TELEX CỰC MƯỢT)
+                    ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: _captionController,
+                      builder: (context, captionValue, child) {
+                        final currentCaption = captionValue.text;
+
+                        return Container(
+                          height: 220,
+                          decoration: BoxDecoration(
+                            color: Colors.black26,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white24),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: Stack(
+                              children: [
+                                if (_selectedMode == 0) ...[
+                                  Positioned.fill(
+                                    child: _pickedImageFile != null
+                                        ? buildSmartImage(
+                                            _pickedImageFile!.path,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Container(
+                                            color: const Color(0xFF334155),
+                                            child: const Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Icon(Icons.add_a_photo_rounded,
+                                                    color: Colors.white54,
+                                                    size: 48),
+                                                SizedBox(height: 8),
+                                                Text(
+                                                  'Chưa chọn ảnh nào.\nBấm "Chọn ảnh" bên dưới',
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                      color: Colors.white54,
+                                                      fontSize: 12),
+                                                ),
+                                              ],
                                             ),
+                                          ),
+                                  ),
+                                  if (_pickedImageFile != null)
+                                    Positioned(
+                                      bottom: 12,
+                                      left: 16,
+                                      right: 16,
+                                      child: Text(
+                                        currentCaption.isNotEmpty
+                                            ? currentCaption
+                                            : '1 tháng xem 4film 🥺',
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          shadows: [
+                                            Shadow(
+                                                color: Colors.black, blurRadius: 6)
                                           ],
                                         ),
                                       ),
-                              ),
-                              if (_pickedImageFile != null)
-                                Positioned(
-                                  bottom: 12,
-                                  left: 16,
-                                  right: 16,
-                                  child: Text(
-                                    _captionController.text.isNotEmpty
-                                        ? _captionController.text
-                                        : '1 tháng xem 4film 🥺',
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      shadows: [
-                                        Shadow(color: Colors.black, blurRadius: 6)
-                                      ],
                                     ),
-                                  ),
-                                ),
-                            ] else ...[
-                              Container(
-                                decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [Color(0xFF6366F1), Color(0xFFEC4899)],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(20.0),
-                                    child: Text(
-                                      _captionController.text.isNotEmpty
-                                          ? _captionController.text
-                                          : 'Nhập nội dung ghi chú của bạn...',
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
+                                ] else ...[
+                                  Container(
+                                    decoration: const BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Color(0xFF6366F1),
+                                          Color(0xFFEC4899)
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(20.0),
+                                        child: Text(
+                                          currentCaption.isNotEmpty
+                                              ? currentCaption
+                                              : 'Nhập nội dung ghi chú của bạn...',
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 16),
 
@@ -1455,11 +1469,10 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
                       const SizedBox(height: 12),
                     ],
 
-                    // CAPTION INPUT FIELD
+                    // CAPTION INPUT FIELD (GIỮ NGUYÊN BỘ SOẠN THẢO IME GIÚP GÕ TIẾNG VIỆT KHÔNG BỊ TRÙNG/MẤT KÝ TỰ)
                     TextField(
                       controller: _captionController,
                       style: const TextStyle(color: Colors.white, fontSize: 14),
-                      onChanged: (_) => setState(() {}),
                       maxLines: _selectedMode == 1 ? 3 : 1,
                       decoration: InputDecoration(
                         labelText: _selectedMode == 0

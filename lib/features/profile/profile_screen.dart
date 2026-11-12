@@ -695,15 +695,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     title: const Text(
-                      'Giao diện ứng dụng',
+                      'Giao diện',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     subtitle: Text(
                       currentMode == ThemeMode.dark
-                          ? 'Đang bật Giao diện Tối (Dark Mode)'
+                          ? 'Đang bật Giao diện Tối'
                           : currentMode == ThemeMode.light
-                              ? 'Đang bật Giao diện Sáng (Light Mode)'
-                              : 'Tự động theo hệ thống thiết bị',
+                              ? 'Đang bật Giao diện Sáng'
+                              : 'Tự động theo hệ thống',
                     ),
                     trailing: DropdownButton<ThemeMode>(
                       value: currentMode,
@@ -713,30 +713,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         DropdownMenuItem(
                           value: ThemeMode.light,
                           child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.light_mode_rounded, size: 18, color: Colors.orange),
                               SizedBox(width: 8),
-                              Text('Chế độ Sáng'),
+                              Text('Sáng'),
                             ],
                           ),
                         ),
                         DropdownMenuItem(
                           value: ThemeMode.dark,
                           child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.dark_mode_rounded, size: 18, color: Colors.indigoAccent),
                               SizedBox(width: 8),
-                              Text('Chế độ Tối'),
+                              Text('Tối'),
                             ],
                           ),
                         ),
                         DropdownMenuItem(
                           value: ThemeMode.system,
                           child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.brightness_auto_rounded, size: 18, color: Colors.teal),
                               SizedBox(width: 8),
-                              Text('Theo hệ thống'),
+                              Text('Hệ thống'),
                             ],
                           ),
                         ),

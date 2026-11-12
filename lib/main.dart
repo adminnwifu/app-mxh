@@ -10,319 +10,164 @@ import 'services/auth_service.dart';
 import 'services/notification_service.dart';
 
 /// Chế độ giao diện mặc định MÀU ĐEN (ThemeMode.dark)
-
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.dark);
 
-
 Future<void> main() async {
-
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp(
-
     options: DefaultFirebaseOptions.currentPlatform,
-
   );
-
   runApp(const MiniSocialApp());
-
 }
 
-
-
 class MiniSocialApp extends StatelessWidget {
-
   const MiniSocialApp({super.key});
 
-
-
   @override
-
   Widget build(BuildContext context) {
-
     final primaryColor = const Color(0xFF6366F1); // Indigo Accent
-
     final secondaryColor = const Color(0xFFEC4899); // Pink Accent
-
     final borderSide = const BorderSide(color: Color(0xFF475569), width: 1.5);
 
-
-
     return ValueListenableBuilder<ThemeMode>(
-
       valueListenable: themeNotifier,
-
       builder: (context, currentMode, _) {
-
         return MaterialApp(
-
+          key: ValueKey(currentMode), // RESET SẠCH INK RENDERER KHI CHUYỂN CHẾ ĐỘ
           title: 'MiniSocial',
-
           debugShowCheckedModeBanner: false,
-
           themeMode: currentMode,
 
-
-
-          // BỘ PHÓNG TO CỠ CHỮ TOÀN BỘ ỨNG DỤNG (Điều chỉnh vừa phải 1.15 để tránh tràn màn hình)
-
+          // BỘ PHÓNG TO CỠ CHỮ TOÀN BỘ ỨNG DỤNG HỖ TRỢ CỠ CHỮ 26PT RÕ NẾT
           builder: (context, child) {
-
             return MediaQuery(
-
               data: MediaQuery.of(context).copyWith(
-
-                textScaler: const TextScaler.linear(1.15),
-
+                textScaler: const TextScaler.linear(1.25),
               ),
-
               child: child!,
-
             );
-
           },
 
-
-          // 1. GIAO DIỆN SÁNG (Light Theme)
-
+          // 1. GIAO DIỆN SÁNG CHUẨN (Light Theme)
           theme: ThemeData(
-
             useMaterial3: true,
-
             brightness: Brightness.light,
-
             colorScheme: ColorScheme.fromSeed(
-
               seedColor: primaryColor,
-
               primary: primaryColor,
-
               secondary: secondaryColor,
-
               brightness: Brightness.light,
-
             ),
-
             scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-
             textTheme: const TextTheme(
-
-              bodyLarge: TextStyle(fontSize: 18),
-
-              bodyMedium: TextStyle(fontSize: 16),
-
-              bodySmall: TextStyle(fontSize: 14),
-
-              titleLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-
-              titleMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-
-              titleSmall: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-
+              bodyLarge: TextStyle(fontSize: 26),
+              bodyMedium: TextStyle(fontSize: 24),
+              bodySmall: TextStyle(fontSize: 20),
+              titleLarge: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              titleMedium: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              titleSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
-
             appBarTheme: const AppBarTheme(
-
               centerTitle: false,
-
               elevation: 0,
-
               backgroundColor: Colors.white,
-
               foregroundColor: Colors.black87,
-
               titleTextStyle: TextStyle(
-
                 color: Colors.black87,
-
-                fontSize: 22,
-
+                fontSize: 26,
                 fontWeight: FontWeight.bold,
-
               ),
-
             ),
-
           ),
 
-
-
-        // 2. GIAO DIỆN TỐI (Dark Theme cao cấp)
-
+          // 2. GIAO DIỆN TỐI CHUẨN (Dark Theme Cỡ Chữ 26pt Rõ Nét)
           darkTheme: ThemeData(
-
             useMaterial3: true,
-
             brightness: Brightness.dark,
-
             colorScheme: ColorScheme.fromSeed(
-
               seedColor: primaryColor,
-
               primary: primaryColor,
-
               secondary: secondaryColor,
-
               brightness: Brightness.dark,
-
               surface: const Color(0xFF1E293B),
-
             ),
-
             scaffoldBackgroundColor: const Color(0xFF0F172A),
-
             textTheme: const TextTheme(
-
-              bodyLarge: TextStyle(fontSize: 18),
-
-              bodyMedium: TextStyle(fontSize: 16),
-
-              bodySmall: TextStyle(fontSize: 14),
-
-              titleLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-
-              titleMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-
-              titleSmall: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-
+              bodyLarge: TextStyle(fontSize: 26),
+              bodyMedium: TextStyle(fontSize: 24),
+              bodySmall: TextStyle(fontSize: 20),
+              titleLarge: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              titleMedium: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              titleSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
-
             appBarTheme: const AppBarTheme(
-
               centerTitle: false,
-
               elevation: 0,
-
               backgroundColor: Color(0xFF0F172A),
-
               foregroundColor: Colors.white,
-
               titleTextStyle: TextStyle(
-
                 color: Colors.white,
-
-                fontSize: 22,
-
+                fontSize: 26,
                 fontWeight: FontWeight.bold,
-
               ),
-
             ),
-
             cardTheme: CardThemeData(
-
               elevation: 0,
-
               shape: RoundedRectangleBorder(
-
                 borderRadius: BorderRadius.circular(16),
-
                 side: const BorderSide(color: Color(0xFF334155), width: 1.5),
-
               ),
-
               color: const Color(0xFF1E293B),
-
             ),
-
             inputDecorationTheme: InputDecorationTheme(
-
               filled: true,
-
               fillColor: const Color(0xFF1E293B),
-
               border: OutlineInputBorder(
-
                 borderRadius: BorderRadius.circular(12),
-
                 borderSide: BorderSide.none,
-
               ),
-
               enabledBorder: OutlineInputBorder(
-
                 borderRadius: BorderRadius.circular(12),
-
                 borderSide: const BorderSide(color: Color(0xFF334155), width: 1.5),
-
               ),
-
               focusedBorder: OutlineInputBorder(
-
                 borderRadius: BorderRadius.circular(12),
-
                 borderSide: BorderSide(color: primaryColor, width: 1.5),
-
               ),
-
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-
             ),
-
             outlinedButtonTheme: OutlinedButtonThemeData(
-
               style: OutlinedButton.styleFrom(
-
                 shape: RoundedRectangleBorder(
-
                   borderRadius: BorderRadius.circular(24),
-
                 ),
-
                 side: borderSide,
-
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-
-                textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-
+                textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
-
             ),
-
             filledButtonTheme: FilledButtonThemeData(
-
               style: FilledButton.styleFrom(
-
                 shape: RoundedRectangleBorder(
-
                   borderRadius: BorderRadius.circular(12),
-
                 ),
-
                 padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-
-                textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-
+                textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
-
             ),
-
             navigationBarTheme: NavigationBarThemeData(
-
               backgroundColor: const Color(0xFF1E293B),
-
               indicatorColor: primaryColor.withValues(alpha: 0.25),
-
               elevation: 8,
-
               labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-
               height: 65,
-
             ),
-
           ),
-
           home: const AuthGate(),
-
         );
-
       },
-
     );
-
   }
-
 }
 
 /// Cổng kiểm tra trạng thái đăng nhập tự động
