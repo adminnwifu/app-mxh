@@ -180,7 +180,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               : (isDark ? const Color(0xFF334155) : Colors.white),
                           gradient: isMe
                               ? LinearGradient(
-                                  colors: [primaryColor, primaryColor.withOpacity(0.85)],
+                                  colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 )
@@ -193,7 +193,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
+                              color: Colors.black.withValues(alpha: 0.04),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),

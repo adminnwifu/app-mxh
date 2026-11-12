@@ -119,15 +119,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showAvatarOptionsSheet(BuildContext context, UserModel user) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+        return SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
               Container(
                 width: 36,
                 height: 4,
@@ -212,10 +215,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 8),
             ],
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 
   void _showEditAvatarDialog(BuildContext context, UserModel user) {
     XFile? pickedAvatarFile;
@@ -648,19 +652,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showSettingsSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        return ValueListenableBuilder<ThemeMode>(
-          valueListenable: themeNotifier,
-          builder: (context, currentMode, _) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+        return SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: ValueListenableBuilder<ThemeMode>(
+              valueListenable: themeNotifier,
+              builder: (context, currentMode, _) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   Center(
                     child: Container(
                       width: 36,
@@ -764,13 +771,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 12),
                 ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+              );
+            },
+          ),
+        ),
+      );
+    },
+  );
+}
 
   void _confirmSignOut(BuildContext context) {
     showDialog(

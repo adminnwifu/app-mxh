@@ -1148,15 +1148,22 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
     final primaryColor = theme.colorScheme.primary;
     final backgroundColor = isDark ? const Color(0xFF0F172A) : const Color(0xFF1E293B);
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.88,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: SafeArea(
-        child: Column(
-          children: [
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.88,
+        ),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             // HEADER STUDIO
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1472,8 +1479,9 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _CreatePostModalSheet extends StatefulWidget {
@@ -1563,6 +1571,9 @@ class _CreatePostModalSheetState extends State<_CreatePostModalSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
+        ),
         decoration: BoxDecoration(
           color: theme.scaffoldBackgroundColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -1738,7 +1749,7 @@ class _CreatePostModalSheetState extends State<_CreatePostModalSheet> {
                       top: 8,
                       right: 8,
                       child: CircleAvatar(
-                        backgroundColor: Colors.black.withOpacity(0.6),
+                        backgroundColor: Colors.black.withValues(alpha: 0.6),
                         radius: 16,
                         child: IconButton(
                           icon: const Icon(Icons.close, size: 16, color: Colors.white),
@@ -1862,15 +1873,18 @@ class _PostCardWidgetState extends State<PostCardWidget> {
   void _showShareOptionsSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+        return SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
               Container(
                 width: 36,
                 height: 4,
@@ -1924,10 +1938,11 @@ class _PostCardWidgetState extends State<PostCardWidget> {
               const SizedBox(height: 12),
             ],
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
 
   void _handleLikeToggle() async {
     if (_isLiking) return;
@@ -1949,11 +1964,19 @@ class _PostCardWidgetState extends State<PostCardWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final onSurface = theme.colorScheme.onSurface;
+    final secondaryTextColor = isDark ? Colors.white70 : Colors.black54;
+    final actionIconColor = isDark ? Colors.white70 : Colors.grey.shade700;
+    final actionTextColor = isDark ? Colors.white : Colors.grey.shade800;
+
     final userReaction = widget.post.getReactionOf(widget.currentUser.uid);
     final totalReactions = widget.post.totalReactions;
     final timeStr = DateFormat('dd/MM/yyyy HH:mm').format(widget.post.createdAt);
 
     return Card(
+      key: ValueKey(widget.post.postId),
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Padding(
         padding: const EdgeInsets.all(14.0),
@@ -1979,19 +2002,19 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                     children: [
                       Text(
                         widget.post.authorName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
-                          color: Colors.white,
+                          color: onSurface,
                         ),
                       ),
                       Row(
                         children: [
                           Text(
                             timeStr,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white70,
+                              color: secondaryTextColor,
                             ),
                           ),
                           const SizedBox(width: 6),
@@ -2002,7 +2025,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                                     ? Icons.group
                                     : Icons.lock,
                             size: 13,
-                            color: Colors.white70,
+                            color: secondaryTextColor,
                           ),
                           const SizedBox(width: 3),
                           Text(
@@ -2011,9 +2034,9 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                                 : widget.post.visibility == 'friends'
                                     ? 'Bạn bè'
                                     : 'Chỉ mình tôi',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white70,
+                              color: secondaryTextColor,
                             ),
                           ),
                         ],
@@ -2087,7 +2110,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
             ExpandableTextWidget(
               text: widget.post.content,
               maxChars: 120,
-              style: const TextStyle(fontSize: 15, height: 1.4, color: Colors.white),
+              style: TextStyle(fontSize: 15, height: 1.4, color: onSurface),
             ),
             const SizedBox(height: 12),
             // STATS ROW
@@ -2096,7 +2119,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                 if (totalReactions > 0) ...[
                   Text(
                     '❤️ $totalReactions lượt thích',
-                    style: const TextStyle(fontSize: 12, color: Colors.white70),
+                    style: TextStyle(fontSize: 12, color: secondaryTextColor),
                   ),
                 ],
                 const Spacer(),
@@ -2105,7 +2128,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                     onTap: () => _openCommentSheet(context),
                     child: Text(
                       '${widget.post.commentCount} bình luận',
-                      style: const TextStyle(fontSize: 12, color: Colors.white70),
+                      style: TextStyle(fontSize: 12, color: secondaryTextColor),
                     ),
                   ),
               ],
@@ -2127,7 +2150,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                         children: [
                           Icon(
                             userReaction != null ? Icons.favorite : Icons.favorite_border_rounded,
-                            color: userReaction != null ? Colors.redAccent : Colors.white70,
+                            color: userReaction != null ? Colors.redAccent : actionIconColor,
                             size: 20,
                           ),
                           const SizedBox(width: 6),
@@ -2136,7 +2159,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: userReaction != null ? FontWeight.bold : FontWeight.normal,
-                              color: userReaction != null ? Colors.redAccent : Colors.white,
+                              color: userReaction != null ? Colors.redAccent : actionTextColor,
                             ),
                           ),
                         ],
@@ -2153,9 +2176,9 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.mode_comment_outlined,
-                            color: Colors.white70,
+                            color: actionIconColor,
                             size: 20,
                           ),
                           const SizedBox(width: 6),
@@ -2163,9 +2186,9 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                             widget.post.commentCount > 0
                                 ? '${widget.post.commentCount} Bình luận'
                                 : 'Bình luận',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
-                              color: Colors.white,
+                              color: actionTextColor,
                             ),
                           ),
                         ],
@@ -2184,7 +2207,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                         children: [
                           Icon(
                             Icons.share_outlined,
-                            color: Colors.grey.shade700,
+                            color: actionIconColor,
                             size: 18,
                           ),
                           const SizedBox(width: 4),
@@ -2195,7 +2218,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                                 'Chia sẻ',
                                 style: TextStyle(
                                   fontSize: 12.5,
-                                  color: Colors.grey.shade700,
+                                  color: actionTextColor,
                                 ),
                               ),
                             ),
@@ -2274,14 +2297,21 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
 
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: SizedBox(
-        height: MediaQuery.of(context).size.height * 0.75,
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        decoration: BoxDecoration(
+          color: theme.scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
         child: Column(
           children: [
             const SizedBox(height: 8),
