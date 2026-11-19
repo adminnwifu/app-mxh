@@ -278,11 +278,15 @@ class _IncomingRequestsTabWidgetState extends State<_IncomingRequestsTabWidget>
                     ),
                     Row(
                       children: [
-                        FilledButton(
+                        OutlinedButton(
                           onPressed: () => userService.acceptFriendRequest(req),
-                          style: FilledButton.styleFrom(
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                              color: Theme.of(context).colorScheme.primary,
+                              width: 1.5,
+                            ),
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
+                              horizontal: 12,
                               vertical: 8,
                             ),
                           ),
@@ -293,7 +297,8 @@ class _IncomingRequestsTabWidgetState extends State<_IncomingRequestsTabWidget>
                           onPressed: () =>
                               userService.rejectFriendRequest(req.requestId),
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFF475569), width: 1.5),
+                            foregroundColor: Colors.redAccent,
+                            side: const BorderSide(color: Colors.redAccent, width: 1.5),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
                               vertical: 8,
