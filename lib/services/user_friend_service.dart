@@ -101,6 +101,24 @@ class UserFriendService {
     await _firestore.collection('friend_requests').doc(requestId).delete();
   }
 
+  /// Hủy kết bạn giữa 2 người dùng
+  Future<void> unfriend({
+    required String currentUserId,
+    required String targetUserId,
+  }) async {
+    final currentUserRef = _firestore.collection('users').doc(currentUserId);
+    final targetUserRef = _firestore.collection('users').doc(targetUserId);
+
+    await _firestore.runTransaction((transaction) async {
+      transaction.update(currentUserRef, {
+        'friendIds': FieldValue.arrayRemove([targetUserId]),
+      });
+      transaction.update(targetUserRef, {
+        'friendIds': FieldValue.arrayRemove([currentUserId]),
+      });
+    });
+  }
+
   Future<void> updateProfile({
     required String uid,
     required String displayName,

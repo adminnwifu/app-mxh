@@ -192,9 +192,20 @@ class UserProfileDetailScreen extends StatelessWidget {
                                 Expanded(
                                   child: isFriend
                                       ? OutlinedButton.icon(
-                                          onPressed: null,
-                                          icon: const Icon(Icons.check_rounded, size: 18),
-                                          label: const Text('Đã là bạn bè'),
+                                          onPressed: () {
+                                            _showUnfriendConfirmationDialog(
+                                              context,
+                                              userService: userService,
+                                              currentUserId: freshCurrentUser.uid,
+                                              targetUser: user,
+                                            );
+                                          },
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: Colors.redAccent,
+                                            side: const BorderSide(color: Colors.redAccent, width: 1.2),
+                                          ),
+                                          icon: const Icon(Icons.person_remove_rounded, size: 18),
+                                          label: const Text('Hủy kết bạn'),
                                         )
                                       : OutlinedButton.icon(
                                           onPressed: () async {
@@ -292,6 +303,74 @@ class UserProfileDetailScreen extends StatelessWidget {
               ),
             );
           },
+        );
+      },
+    );
+  }
+
+  void _showUnfriendConfirmationDialog(
+    BuildContext context, {
+    required UserFriendService userService,
+    required String currentUserId,
+    required UserModel targetUser,
+  }) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        final isDark = Theme.of(dialogContext).brightness == Brightness.dark;
+        return AlertDialog(
+          backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.person_remove_rounded, color: Colors.redAccent),
+              SizedBox(width: 10),
+              Text(
+                'Xác nhận hủy kết bạn',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Text(
+            'Bạn có chắc chắn muốn hủy kết bạn với ${targetUser.displayName} không?',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDark ? Colors.white70 : Colors.black87,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // Đóng bảng thông báo không hủy
+              },
+              child: const Text(
+                'Không',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            FilledButton(
+              onPressed: () async {
+                Navigator.of(dialogContext).pop(); // Đóng bảng thông báo
+                await userService.unfriend(
+                  currentUserId: currentUserId,
+                  targetUserId: targetUser.uid,
+                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Đã hủy kết bạn với ${targetUser.displayName}'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Có'),
+            ),
+          ],
         );
       },
     );
