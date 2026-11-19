@@ -61,6 +61,19 @@ Widget buildSmartImage(String path, {BoxFit fit = BoxFit.cover, double? width, d
   }
 }
 
+/// Helper lấy ImageProvider thông minh từ URL mạng hoặc Tệp bộ nhớ điện thoại
+ImageProvider? getSmartImageProvider(String? pathOrUrl) {
+  if (pathOrUrl == null || pathOrUrl.isEmpty) return null;
+  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
+    return NetworkImage(pathOrUrl);
+  }
+  final file = File(pathOrUrl);
+  if (file.existsSync()) {
+    return FileImage(file);
+  }
+  return NetworkImage(pathOrUrl);
+}
+
 /// Widget thu gọn văn bản dài cho Bài viết và Bình luận với nút Xem thêm / Thu gọn
 class ExpandableTextWidget extends StatefulWidget {
   final String text;
@@ -1161,7 +1174,11 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final primaryColor = theme.colorScheme.primary;
-    final backgroundColor = isDark ? const Color(0xFF0F172A) : const Color(0xFF1E293B);
+    final backgroundColor = theme.scaffoldBackgroundColor;
+    final onSurfaceColor = theme.colorScheme.onSurface;
+    final modeInactiveColor = isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey.shade100;
+    final modeInactiveBorder = isDark ? Colors.white24 : Colors.grey.shade300;
+    final modeInactiveTextColor = isDark ? Colors.white : Colors.black87;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -1185,14 +1202,14 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close, color: onSurfaceColor),
                     onPressed: () => Navigator.pop(context),
                   ),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Tạo Story',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: onSurfaceColor,
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                     ),
@@ -1215,7 +1232,7 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
                 ],
               ),
             ),
-            const Divider(color: Colors.white12, height: 1),
+            const Divider(height: 1),
 
             // THẺ CHỌN CHẾ ĐỘ TRỰC QUAN
             Padding(
@@ -1230,24 +1247,27 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
                         decoration: BoxDecoration(
                           color: _selectedMode == 0
                               ? primaryColor
-                              : Colors.white.withValues(alpha: 0.1),
+                              : modeInactiveColor,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: _selectedMode == 0
-                                ? Colors.white
-                                : Colors.white24,
+                                ? primaryColor
+                                : modeInactiveBorder,
                           ),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.photo_library_rounded,
-                                color: Colors.white, size: 18),
-                            SizedBox(width: 8),
+                            Icon(
+                              Icons.photo_library_rounded,
+                              color: _selectedMode == 0 ? Colors.white : modeInactiveTextColor,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
                             Text(
                               'Tin Ảnh / Video',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: _selectedMode == 0 ? Colors.white : modeInactiveTextColor,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -1266,24 +1286,27 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
                         decoration: BoxDecoration(
                           color: _selectedMode == 1
                               ? primaryColor
-                              : Colors.white.withValues(alpha: 0.1),
+                              : modeInactiveColor,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: _selectedMode == 1
-                                ? Colors.white
-                                : Colors.white24,
+                                ? primaryColor
+                                : modeInactiveBorder,
                           ),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.edit_note_rounded,
-                                color: Colors.white, size: 18),
-                            SizedBox(width: 8),
+                            Icon(
+                              Icons.edit_note_rounded,
+                              color: _selectedMode == 1 ? Colors.white : modeInactiveTextColor,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
                             Text(
                               'Tin Văn bản',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: _selectedMode == 1 ? Colors.white : modeInactiveTextColor,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -1417,15 +1440,15 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
                               onPressed: () => _pickImage(ImageSource.gallery),
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(vertical: 14),
-                                side: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+                                side: BorderSide(color: primaryColor, width: 1.5),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(24),
                                 ),
                               ),
-                              icon: const Icon(Icons.photo_library_rounded, size: 18, color: Colors.white),
-                              label: const Text(
+                              icon: Icon(Icons.photo_library_rounded, size: 18, color: primaryColor),
+                              label: Text(
                                 'Chọn ảnh',
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
@@ -1435,15 +1458,15 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
                               onPressed: () => _pickImage(ImageSource.camera),
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(vertical: 14),
-                                side: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+                                side: BorderSide(color: primaryColor, width: 1.5),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(24),
                                 ),
                               ),
-                              icon: const Icon(Icons.photo_camera_rounded, size: 18, color: Colors.white),
-                              label: const Text(
+                              icon: Icon(Icons.photo_camera_rounded, size: 18, color: primaryColor),
+                              label: Text(
                                 'Camera',
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
@@ -1484,19 +1507,26 @@ class _CreateStoryStudioModalState extends State<_CreateStoryStudioModal> {
                       const SizedBox(height: 12),
                     ],
 
-                    // CAPTION INPUT FIELD (GIỮ NGUYÊN BỘ SOẠN THẢO IME GIÚP GÕ TIẾNG VIỆT KHÔNG BỊ TRÙNG/MẤT KÝ TỰ)
+                    // CAPTION INPUT FIELD
                     TextField(
                       controller: _captionController,
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      style: TextStyle(color: onSurfaceColor, fontSize: 14),
                       maxLines: _selectedMode == 1 ? 3 : 1,
                       decoration: InputDecoration(
                         labelText: _selectedMode == 0
                             ? 'Chú thích ảnh (Ví dụ: 1 tháng xem 4film 🥺)'
                             : 'Nội dung ghi chú / văn bản...',
-                        labelStyle: const TextStyle(color: Colors.white70),
-                        prefixIcon: const Icon(Icons.title, color: Colors.white70),
+                        labelStyle: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.grey.shade600,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.title,
+                          color: isDark ? Colors.white70 : Colors.grey.shade600,
+                        ),
                         filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.08),
+                        fillColor: isDark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : Colors.grey.shade100,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -2011,127 +2041,135 @@ class _PostCardWidgetState extends State<PostCardWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // HEADER POST
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundImage: widget.post.authorAvatar.isNotEmpty
-                      ? NetworkImage(widget.post.authorAvatar)
-                      : null,
-                  child: widget.post.authorAvatar.isEmpty
-                      ? const Icon(Icons.person, size: 20)
-                      : null,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.post.authorName,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: onSurface,
-                        ),
-                      ),
-                      Row(
+            // HEADER POST WITH LIVE AUTHOR PROFILE & AVATAR
+            StreamBuilder<UserModel?>(
+              stream: UserFriendService().getUserProfileStream(widget.post.authorId),
+              builder: (context, authorSnap) {
+                final authorAvatar = (authorSnap.data?.avatarUrl.isNotEmpty == true)
+                    ? authorSnap.data!.avatarUrl
+                    : widget.post.authorAvatar;
+                final authorName = (authorSnap.data?.displayName.isNotEmpty == true)
+                    ? authorSnap.data!.displayName
+                    : widget.post.authorName;
+
+                return Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundImage: getSmartImageProvider(authorAvatar),
+                      child: (authorAvatar.isEmpty) ? const Icon(Icons.person, size: 20) : null,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            timeStr,
+                            authorName,
                             style: TextStyle(
-                              fontSize: 11,
-                              color: secondaryTextColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: onSurface,
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          Icon(
-                            widget.post.visibility == 'public'
-                                ? Icons.public
-                                : widget.post.visibility == 'friends'
-                                    ? Icons.group
-                                    : Icons.lock,
-                            size: 13,
-                            color: secondaryTextColor,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            widget.post.visibility == 'public'
-                                ? 'Công khai'
-                                : widget.post.visibility == 'friends'
-                                    ? 'Bạn bè'
-                                    : 'Chỉ mình tôi',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: secondaryTextColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_horiz_rounded),
-                  onSelected: (val) async {
-                    if (val == 'delete') {
-                      _confirmDeletePost(context);
-                    } else if (val == 'copy') {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Đã sao chép nội dung bài viết!'),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    } else if (val == 'hide') {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Đã ẩn bài viết khỏi trang chủ!'),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  },
-                  itemBuilder: (_) => [
-                    if (widget.post.authorId == widget.currentUser.uid)
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete_outline_rounded,
-                                color: Colors.redAccent, size: 18),
-                            SizedBox(width: 8),
-                            Text('Xóa bài viết',
+                          Row(
+                            children: [
+                              Text(
+                                timeStr,
                                 style: TextStyle(
-                                    color: Colors.redAccent,
-                                    fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ),
-                    const PopupMenuItem(
-                      value: 'copy',
-                      child: Row(
-                        children: [
-                          Icon(Icons.copy_rounded, size: 18),
-                          SizedBox(width: 8),
-                          Text('Sao chép văn bản'),
+                                  fontSize: 11,
+                                  color: secondaryTextColor,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Icon(
+                                widget.post.visibility == 'public'
+                                    ? Icons.public
+                                    : widget.post.visibility == 'friends'
+                                        ? Icons.group
+                                        : Icons.lock,
+                                size: 13,
+                                color: secondaryTextColor,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                widget.post.visibility == 'public'
+                                    ? 'Công khai'
+                                    : widget.post.visibility == 'friends'
+                                        ? 'Bạn bè'
+                                        : 'Chỉ mình tôi',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: secondaryTextColor,
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
-                    const PopupMenuItem(
-                      value: 'hide',
-                      child: Row(
-                        children: [
-                          Icon(Icons.visibility_off_outlined, size: 18),
-                          SizedBox(width: 8),
-                          Text('Ẩn bài viết'),
-                        ],
-                      ),
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_horiz_rounded),
+                      onSelected: (val) async {
+                        if (val == 'delete') {
+                          _confirmDeletePost(context);
+                        } else if (val == 'copy') {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Đã sao chép nội dung bài viết!'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        } else if (val == 'hide') {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Đã ẩn bài viết khỏi trang chủ!'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      },
+                      itemBuilder: (_) => [
+                        if (widget.post.authorId == widget.currentUser.uid)
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete_outline_rounded,
+                                    color: Colors.redAccent, size: 18),
+                                SizedBox(width: 8),
+                                Text('Xóa bài viết',
+                                    style: TextStyle(
+                                        color: Colors.redAccent,
+                                        fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        const PopupMenuItem(
+                          value: 'copy',
+                          child: Row(
+                            children: [
+                              Icon(Icons.copy_rounded, size: 18),
+                              SizedBox(width: 8),
+                              Text('Sao chép văn bản'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'hide',
+                          child: Row(
+                            children: [
+                              Icon(Icons.visibility_off_outlined, size: 18),
+                              SizedBox(width: 8),
+                              Text('Ẩn bài viết'),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ],
+                );
+              },
             ),
             const SizedBox(height: 12),
             // CONTENT WITH EXPANDABLE "Xem thêm" / "Thu gọn"
@@ -2146,7 +2184,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
               children: [
                 if (totalReactions > 0) ...[
                   Text(
-                    '❤️ $totalReactions lượt thích',
+                    '👍 $totalReactions lượt thích',
                     style: TextStyle(fontSize: 12, color: secondaryTextColor),
                   ),
                 ],
@@ -2177,8 +2215,8 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            userReaction != null ? Icons.favorite : Icons.favorite_border_rounded,
-                            color: userReaction != null ? Colors.redAccent : actionIconColor,
+                            userReaction != null ? Icons.thumb_up_alt : Icons.thumb_up_alt_outlined,
+                            color: userReaction != null ? theme.colorScheme.primary : actionIconColor,
                             size: 20,
                           ),
                           const SizedBox(width: 6),
@@ -2187,7 +2225,7 @@ class _PostCardWidgetState extends State<PostCardWidget> {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: userReaction != null ? FontWeight.bold : FontWeight.normal,
-                              color: userReaction != null ? Colors.redAccent : actionTextColor,
+                              color: userReaction != null ? theme.colorScheme.primary : actionTextColor,
                             ),
                           ),
                         ],
@@ -2394,14 +2432,20 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            CircleAvatar(
-                              radius: isReply ? 14 : 17,
-                              backgroundImage: c.authorAvatar.isNotEmpty
-                                  ? NetworkImage(c.authorAvatar)
-                                  : null,
-                              child: c.authorAvatar.isEmpty
-                                  ? Icon(Icons.person, size: isReply ? 14 : 17)
-                                  : null,
+                            StreamBuilder<UserModel?>(
+                              stream: UserFriendService().getUserProfileStream(c.authorId),
+                              builder: (context, cAuthorSnap) {
+                                final commentAvatar = (cAuthorSnap.data?.avatarUrl.isNotEmpty == true)
+                                    ? cAuthorSnap.data!.avatarUrl
+                                    : c.authorAvatar;
+                                return CircleAvatar(
+                                  radius: isReply ? 14 : 17,
+                                  backgroundImage: getSmartImageProvider(commentAvatar),
+                                  child: (commentAvatar.isEmpty)
+                                      ? Icon(Icons.person, size: isReply ? 14 : 17)
+                                      : null,
+                                );
+                              },
                             ),
                             const SizedBox(width: 10),
                             Expanded(

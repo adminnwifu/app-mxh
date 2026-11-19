@@ -207,24 +207,59 @@ class UserProfileDetailScreen extends StatelessWidget {
                                           icon: const Icon(Icons.person_remove_rounded, size: 18),
                                           label: const Text('Hủy kết bạn'),
                                         )
-                                      : OutlinedButton.icon(
-                                          onPressed: () async {
-                                            await userService.sendFriendRequest(
-                                              sender: freshCurrentUser,
-                                              receiverId: user.uid,
-                                            );
-                                            if (context.mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                      'Đã gửi lời mời kết bạn tới ${user.displayName}'),
-                                                  behavior: SnackBarBehavior.floating,
+                                      : StreamBuilder<bool>(
+                                          stream: userService.hasSentFriendRequestStream(
+                                            senderId: freshCurrentUser.uid,
+                                            receiverId: user.uid,
+                                          ),
+                                          builder: (context, reqSnap) {
+                                            final hasSent = reqSnap.data ?? false;
+
+                                            if (hasSent) {
+                                              return OutlinedButton.icon(
+                                                onPressed: () async {
+                                                  await userService.cancelFriendRequest(
+                                                    senderId: freshCurrentUser.uid,
+                                                    receiverId: user.uid,
+                                                  );
+                                                  if (context.mounted) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      const SnackBar(
+                                                        content: Text('Đã hủy lời mời kết bạn'),
+                                                        behavior: SnackBarBehavior.floating,
+                                                      ),
+                                                    );
+                                                  }
+                                                },
+                                                style: OutlinedButton.styleFrom(
+                                                  foregroundColor: Theme.of(context).colorScheme.primary,
+                                                  side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.2),
                                                 ),
+                                                icon: const Icon(Icons.mark_email_read_rounded, size: 18),
+                                                label: const Text('Đã gửi lời mời'),
                                               );
                                             }
+
+                                            return OutlinedButton.icon(
+                                              onPressed: () async {
+                                                await userService.sendFriendRequest(
+                                                  sender: freshCurrentUser,
+                                                  receiverId: user.uid,
+                                                );
+                                                if (context.mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                          'Đã gửi lời mời kết bạn tới ${user.displayName}'),
+                                                      behavior: SnackBarBehavior.floating,
+                                                    ),
+                                                  );
+                                                }
+                                              },
+                                              icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                                              label: const Text('Kết bạn'),
+                                            );
                                           },
-                                          icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
-                                          label: const Text('Kết bạn'),
                                         ),
                                 ),
                               ],

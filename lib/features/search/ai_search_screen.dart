@@ -179,13 +179,13 @@ class _AiSearchScreenState extends State<AiSearchScreen> {
               gradient: LinearGradient(
                 colors: [
                   const Color(0xFFEEF2FF),
-                  primaryColor.withOpacity(0.08),
+                  primaryColor.withValues(alpha: 0.08),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: primaryColor.withOpacity(0.2)),
+              border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -335,23 +335,58 @@ class _AiSearchScreenState extends State<AiSearchScreen> {
                 icon: const Icon(Icons.chat_bubble_rounded, size: 16),
                 label: const Text('Nhắn tin'),
               )
-            : OutlinedButton.icon(
-                onPressed: () async {
-                  await _userService.sendFriendRequest(
-                    sender: widget.currentUser,
-                    receiverId: user.uid,
-                  );
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Đã gửi lời mời kết bạn tới ${user.displayName}'),
-                        behavior: SnackBarBehavior.floating,
+            : StreamBuilder<bool>(
+                stream: _userService.hasSentFriendRequestStream(
+                  senderId: widget.currentUser.uid,
+                  receiverId: user.uid,
+                ),
+                builder: (context, reqSnap) {
+                  final hasSent = reqSnap.data ?? false;
+
+                  if (hasSent) {
+                    return OutlinedButton.icon(
+                      onPressed: () async {
+                        await _userService.cancelFriendRequest(
+                          senderId: widget.currentUser.uid,
+                          receiverId: user.uid,
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Đã hủy lời mời kết bạn'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Theme.of(context).colorScheme.primary,
+                        side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.2),
                       ),
+                      icon: const Icon(Icons.mark_email_read_rounded, size: 16),
+                      label: const Text('Đã gửi lời mời'),
                     );
                   }
+
+                  return OutlinedButton.icon(
+                    onPressed: () async {
+                      await _userService.sendFriendRequest(
+                        sender: widget.currentUser,
+                        receiverId: user.uid,
+                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Đã gửi lời mời kết bạn tới ${user.displayName}'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.person_add_alt_1_rounded, size: 16),
+                    label: const Text('Kết bạn'),
+                  );
                 },
-                icon: const Icon(Icons.person_add_alt_1_rounded, size: 16),
-                label: const Text('Kết bạn'),
               ),
       ),
     );
