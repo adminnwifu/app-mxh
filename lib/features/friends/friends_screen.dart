@@ -154,7 +154,7 @@ class _FriendsListTabWidgetState extends State<_FriendsListTabWidget>
                   friend.email,
                   style: const TextStyle(fontSize: 12),
                 ),
-                trailing: FilledButton.icon(
+                trailing: OutlinedButton.icon(
                   onPressed: () {
                     Navigator.push(
                       context,
