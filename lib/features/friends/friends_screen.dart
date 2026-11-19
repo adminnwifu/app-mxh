@@ -31,7 +31,7 @@ class FriendsScreen extends StatelessWidget {
           child: Scaffold(
             appBar: AppBar(
               title: const Text(
-                'Danh bạ & Bạn bè',
+                'Bạn bè',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               bottom: TabBar(
@@ -89,7 +89,8 @@ class _FriendsListTabWidgetState extends State<_FriendsListTabWidget>
           return const Center(child: CircularProgressIndicator());
         }
 
-        final friends = friendSnap.data ?? [];
+        final friends = List<UserModel>.from(friendSnap.data ?? []);
+        friends.sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
         if (friends.isEmpty) {
           return Builder(
             builder: (context) {
