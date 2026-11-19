@@ -81,6 +81,34 @@ class UserFriendService {
     await _firestore.collection('friend_requests').add(request.toMap());
   }
 
+  Stream<bool> hasSentFriendRequestStream({
+    required String senderId,
+    required String receiverId,
+  }) {
+    return _firestore
+        .collection('friend_requests')
+        .where('senderId', isEqualTo: senderId)
+        .where('receiverId', isEqualTo: receiverId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.isNotEmpty)
+        .asBroadcastStream();
+  }
+
+  Future<void> cancelFriendRequest({
+    required String senderId,
+    required String receiverId,
+  }) async {
+    final query = await _firestore
+        .collection('friend_requests')
+        .where('senderId', isEqualTo: senderId)
+        .where('receiverId', isEqualTo: receiverId)
+        .get();
+
+    for (var doc in query.docs) {
+      await doc.reference.delete();
+    }
+  }
+
   Future<void> acceptFriendRequest(FriendRequestModel request) async {
     final userRef = _firestore.collection('users').doc(request.receiverId);
     final senderRef = _firestore.collection('users').doc(request.senderId);
