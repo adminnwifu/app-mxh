@@ -4,6 +4,7 @@ import '../../models/user_model.dart';
 import '../../services/post_service.dart';
 import '../../services/user_friend_service.dart';
 import '../chat/chat_screen.dart';
+import '../chat/call_screen.dart';
 import '../feed/feed_screen.dart';
 
 class UserProfileDetailScreen extends StatelessWidget {
@@ -187,6 +188,32 @@ class UserProfileDetailScreen extends StatelessWidget {
                                     icon: const Icon(Icons.chat_bubble_rounded, size: 18),
                                     label: const Text('Nhắn tin'),
                                   ),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton.filledTonal(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      PageRouteBuilder(
+                                        fullscreenDialog: true,
+                                        pageBuilder: (context, anim, secAnim) => CallScreen(
+                                          caller: freshCurrentUser,
+                                          receiver: user,
+                                          isVideoCall: false,
+                                        ),
+                                        transitionsBuilder: (context, anim, secAnim, child) {
+                                          return SlideTransition(
+                                            position: anim.drive(
+                                              Tween(begin: const Offset(0.0, 1.0), end: Offset.zero)
+                                                  .chain(CurveTween(curve: Curves.easeOutCubic)),
+                                            ),
+                                            child: child,
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.phone_rounded),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(

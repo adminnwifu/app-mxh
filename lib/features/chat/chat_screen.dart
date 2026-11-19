@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../models/message_model.dart';
 import '../../models/user_model.dart';
 import '../../services/chat_service.dart';
+import 'call_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final UserModel currentUser;
@@ -40,9 +41,38 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  void _navigateToCallScreen(bool isVideoCall) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        fullscreenDialog: true,
+        pageBuilder: (context, animation, secondaryAnimation) => CallScreen(
+          caller: widget.currentUser,
+          receiver: widget.friendUser,
+          isVideoCall: isVideoCall,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(0.0, 1.0);
+          const end = Offset.zero;
+          const curve = Curves.easeOutCubic;
+          final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final scaffoldBg = theme.scaffoldBackgroundColor;
+    final cardBg = theme.cardColor; // 0xFF1E293B in dark theme, white in light theme
+    final onSurface = theme.colorScheme.onSurface;
+    final mutedTextColor = onSurface.withValues(alpha: 0.65);
+    final borderColor = theme.dividerColor.withValues(alpha: 0.2);
 
     return Scaffold(
       appBar: AppBar(
@@ -82,7 +112,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   Text(
                     widget.friendUser.displayName,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: onSurface),
                     overflow: TextOverflow.ellipsis,
                   ),
                   const Text(
@@ -97,19 +127,11 @@ class _ChatScreenState extends State<ChatScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.phone_rounded),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Đang gọi thoại...'), behavior: SnackBarBehavior.floating),
-              );
-            },
+            onPressed: () => _navigateToCallScreen(false),
           ),
           IconButton(
             icon: const Icon(Icons.videocam_rounded),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Đang gọi video...'), behavior: SnackBarBehavior.floating),
-              );
-            },
+            onPressed: () => _navigateToCallScreen(true),
           ),
           const SizedBox(width: 4),
         ],
@@ -144,12 +166,19 @@ class _ChatScreenState extends State<ChatScreen> {
                         const SizedBox(height: 12),
                         Text(
                           widget.friendUser.displayName,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: onSurface,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Hãy gửi lời chào đầu tiên tới ${widget.friendUser.displayName}!',
-                          style: const TextStyle(color: Colors.black54, fontSize: 13),
+                          style: TextStyle(
+                            color: mutedTextColor,
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
@@ -164,7 +193,6 @@ class _ChatScreenState extends State<ChatScreen> {
                     final msg = messages[index];
                     final isMe = msg.senderId == widget.currentUser.uid;
                     final timeStr = DateFormat('HH:mm').format(msg.createdAt);
-                    final isDark = Theme.of(context).brightness == Brightness.dark;
 
                     return Align(
                       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -175,9 +203,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           maxWidth: MediaQuery.of(context).size.width * 0.75,
                         ),
                         decoration: BoxDecoration(
-                          color: isMe
-                              ? primaryColor
-                              : (isDark ? const Color(0xFF334155) : Colors.white),
+                          color: isMe ? primaryColor : cardBg,
                           gradient: isMe
                               ? LinearGradient(
                                   colors: [primaryColor, primaryColor.withValues(alpha: 0.85)],
@@ -206,7 +232,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             Text(
                               msg.text,
                               style: TextStyle(
-                                color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                                color: isMe ? Colors.white : onSurface,
                                 fontSize: 15,
                                 height: 1.3,
                               ),
@@ -215,7 +241,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             Text(
                               timeStr,
                               style: TextStyle(
-                                color: isMe ? Colors.white70 : (isDark ? Colors.white60 : Colors.black45),
+                                color: isMe ? Colors.white70 : mutedTextColor,
                                 fontSize: 10,
                               ),
                             ),
@@ -228,34 +254,70 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
-          const Divider(height: 1),
           // INPUT BAR
-          SafeArea(
-            child: Container(
-              color: Colors.white,
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.blueAccent),
-                    onPressed: () {},
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      onSubmitted: (_) => _handleSend(),
-                      decoration: const InputDecoration(
-                        hintText: 'Nhập tin nhắn...',
-                        contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          Container(
+            decoration: BoxDecoration(
+              color: scaffoldBg,
+              border: Border(top: BorderSide(color: borderColor, width: 1)),
+            ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.add_circle_outline_rounded,
+                        color: primaryColor,
+                        size: 26,
+                      ),
+                      onPressed: () {},
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: _messageController,
+                        minLines: 1,
+                        maxLines: 3,
+                        keyboardType: TextInputType.multiline,
+                        style: TextStyle(
+                          color: onSurface,
+                          fontSize: 15,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Nhập tin nhắn...',
+                          hintStyle: TextStyle(
+                            color: onSurface.withValues(alpha: 0.5),
+                            fontSize: 14,
+                          ),
+                          filled: true,
+                          fillColor: cardBg,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide(color: borderColor, width: 1),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide(color: borderColor, width: 1),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide(color: primaryColor, width: 1.5),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton.filled(
-                    onPressed: _handleSend,
-                    icon: const Icon(Icons.send_rounded, size: 20),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    IconButton.filled(
+                      onPressed: _handleSend,
+                      style: IconButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.white,
+                      ),
+                      icon: const Icon(Icons.send_rounded, size: 20),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

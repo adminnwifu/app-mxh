@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'features/auth/login_screen.dart';
+import 'features/chat/incoming_call_dialog.dart';
 import 'features/feed/feed_screen.dart';
 import 'features/friends/friends_screen.dart';
 import 'features/profile/profile_screen.dart';
 import 'services/auth_service.dart';
+import 'services/call_service.dart';
 import 'services/notification_service.dart';
 
 /// Chế độ giao diện mặc định MÀU ĐEN (ThemeMode.dark)
@@ -81,6 +84,7 @@ class MiniSocialApp extends StatelessWidget {
               brightness: Brightness.dark,
               surface: const Color(0xFF1E293B),
             ),
+
             scaffoldBackgroundColor: const Color(0xFF0F172A),
             textTheme: const TextTheme(
               bodyLarge: TextStyle(fontSize: 16),
@@ -194,6 +198,8 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
+  StreamSubscription<List<CallModel>>? _incomingCallSub;
+  String? _currentlyShowingCallId;
 
   final List<Widget> _screens = const [
     KeyedSubtree(key: ValueKey('feed_tab'), child: FeedScreen()),
@@ -213,11 +219,33 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       final notifService = NotificationService();
       await notifService.initializeLocalNotifications();
       notifService.listenToRealtimeNotifications(currentUid);
+
+      // Lắng nghe cuộc gọi đến thời gian thực từ Firestore
+      _incomingCallSub?.cancel();
+      _incomingCallSub = CallService().listenToIncomingCalls(currentUid).listen((calls) {
+        if (!mounted || calls.isEmpty) return;
+        final incomingCall = calls.first;
+        if (_currentlyShowingCallId != incomingCall.callId) {
+          _currentlyShowingCallId = incomingCall.callId;
+          _showIncomingCallDialog(incomingCall);
+        }
+      });
     }
+  }
+
+  void _showIncomingCallDialog(CallModel call) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => IncomingCallDialog(call: call),
+    ).then((_) {
+      _currentlyShowingCallId = null;
+    });
   }
 
   @override
   void dispose() {
+    _incomingCallSub?.cancel();
     NotificationService().stopListening();
     super.dispose();
   }
