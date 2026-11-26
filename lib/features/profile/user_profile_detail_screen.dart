@@ -64,11 +64,13 @@ class UserProfileDetailScreen extends StatelessWidget {
                                 ),
                               ),
                               child: user.coverUrl.isNotEmpty
-                                  ? buildSmartImage(
+                                  ? Image.network(
                                       user.coverUrl,
                                       fit: BoxFit.cover,
                                       width: double.infinity,
                                       height: 150,
+                                      errorBuilder: (context, error, stackTrace) =>
+                                          const SizedBox.shrink(),
                                     )
                                   : null,
                             ),
@@ -76,14 +78,18 @@ class UserProfileDetailScreen extends StatelessWidget {
                               bottom: -40,
                               child: Container(
                                 padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).scaffoldBackgroundColor,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
                                   shape: BoxShape.circle,
                                 ),
-                                child: buildUserAvatar(
-                                  avatarUrl: user.avatarUrl,
+                                child: CircleAvatar(
                                   radius: 46,
-                                  isDark: Theme.of(context).brightness == Brightness.dark,
+                                  backgroundImage: user.avatarUrl.isNotEmpty
+                                      ? NetworkImage(user.avatarUrl)
+                                      : null,
+                                  child: user.avatarUrl.isEmpty
+                                      ? const Icon(Icons.person, size: 46)
+                                      : null,
                                 ),
                               ),
                             ),
@@ -115,9 +121,15 @@ class UserProfileDetailScreen extends StatelessWidget {
                             ),
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? const Color(0xFF1E293B)
+                                  : Colors.grey.shade100,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey.shade300),
+                              border: Border.all(
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? const Color(0xFF334155)
+                                    : Colors.grey.shade300,
+                              ),
                             ),
                             child: Text(
                               user.bio.isNotEmpty
@@ -126,7 +138,9 @@ class UserProfileDetailScreen extends StatelessWidget {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontStyle: FontStyle.italic,
-                                color: Colors.grey.shade800,
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white70
+                                    : Colors.grey.shade800,
                                 fontSize: 13,
                               ),
                             ),
