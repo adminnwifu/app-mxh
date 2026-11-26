@@ -122,8 +122,7 @@ class _FriendsListTabWidgetState extends State<_FriendsListTabWidget>
           return const Center(child: CircularProgressIndicator());
         }
 
-        final friends = List<UserModel>.from(friendSnap.data ?? []);
-        friends.sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
+        final friends = friendSnap.data ?? [];
         if (friends.isEmpty) {
           return Builder(
             builder: (context) {
