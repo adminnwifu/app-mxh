@@ -15,7 +15,31 @@ class AuthService {
     required String password,
   }) async {
     try {
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      UserCredential credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      User? user = credential.user;
+
+      if (user != null) {
+        final doc = await _firestore.collection('users').doc(user.uid).get();
+        if (!doc.exists || doc.data() == null) {
+          final newUser = UserModel(
+            uid: user.uid,
+            email: user.email ?? email,
+            displayName: (user.displayName != null && user.displayName!.isNotEmpty)
+                ? user.displayName!
+                : email.split('@').first,
+            bio: 'Xin chào, tôi mới tham gia MiniSocial!',
+            avatarUrl: '',
+            friendIds: const [],
+          );
+          await _firestore
+              .collection('users')
+              .doc(user.uid)
+              .set(newUser.toMap(), SetOptions(merge: true));
+        }
+      }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' ||
           e.code == 'wrong-password' ||
@@ -27,7 +51,7 @@ class AuthService {
       } else if (e.code == 'too-many-requests') {
         throw Exception('Bạn đã thử đăng nhập sai quá nhiều lần. Vui lòng thử lại sau ít phút.');
       } else {
-        throw Exception('Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại!');
+        throw Exception(e.message ?? 'Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại!');
       }
     } catch (e) {
       throw Exception('Email hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại!');
@@ -47,16 +71,23 @@ class AuthService {
 
       User? user = credential.user;
       if (user != null) {
+        try {
+          await user.updateDisplayName(displayName);
+        } catch (_) {}
+
         UserModel newUser = UserModel(
           uid: user.uid,
           email: email,
           displayName: displayName,
           bio: 'Xin chào, tôi mới tham gia MiniSocial!',
           avatarUrl: '',
-          friendIds: [],
+          friendIds: const [],
         );
 
-        await _firestore.collection('users').doc(user.uid).set(newUser.toMap());
+        await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .set(newUser.toMap(), SetOptions(merge: true));
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
@@ -66,10 +97,10 @@ class AuthService {
       } else if (e.code == 'weak-password') {
         throw Exception('Mật khẩu quá yếu. Vui lòng nhập mật khẩu từ 6 ký tự trở lên!');
       } else {
-        throw Exception('Tài khoản Email này đã tồn tại trên hệ thống. Vui lòng đăng nhập hoặc dùng email khác!');
+        throw Exception(e.message ?? 'Đăng ký không thành công. Vui lòng kiểm tra lại thông tin!');
       }
     } catch (e) {
-      throw Exception('Đăng ký không thành công. Vui lòng kiểm tra lại thông tin!');
+      throw Exception('Đăng ký không thành công: ${e.toString()}');
     }
   }
 

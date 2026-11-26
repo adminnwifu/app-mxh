@@ -175,6 +175,8 @@ class NotificationService {
           }
         }
       }
+    }, onError: (error) {
+      // Bắt lỗi permission-denied mượt mà không crash ứng dụng
     });
   }
 

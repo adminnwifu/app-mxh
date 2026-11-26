@@ -197,6 +197,11 @@ class FeedScreen extends StatelessWidget {
     return StreamBuilder<UserModel?>(
       stream: userService.getUserProfileStream(currentUid),
       builder: (context, userSnapshot) {
+        if (userSnapshot.connectionState == ConnectionState.waiting || !userSnapshot.hasData) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
         final currentUser = userSnapshot.data;
         if (currentUser == null) {
           return const Scaffold(

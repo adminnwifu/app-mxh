@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../models/friend_request_model.dart';
 import '../models/user_model.dart';
 
@@ -6,10 +7,18 @@ class UserFriendService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Stream<UserModel?> getUserProfileStream(String uid) {
-    return _firestore.collection('users').doc(uid).snapshots().map((doc) {
-      if (!doc.exists) return null;
-      return UserModel.fromMap(doc.data()!, doc.id);
-    }).asBroadcastStream();
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .map((doc) {
+          if (!doc.exists || doc.data() == null) return null;
+          return UserModel.fromMap(doc.data()!, doc.id);
+        })
+        .handleError((error) {
+          debugPrint('getUserProfileStream error: $error');
+        })
+        .asBroadcastStream();
   }
 
   Stream<List<UserModel>> getFriendsListStream(List<String> friendIds) {
@@ -22,10 +31,14 @@ class UserFriendService {
         .where(FieldPath.documentId, whereIn: friendIds.take(10).toList())
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        return UserModel.fromMap(doc.data(), doc.id);
-      }).toList();
-    }).asBroadcastStream();
+          return snapshot.docs.map((doc) {
+            return UserModel.fromMap(doc.data(), doc.id);
+          }).toList();
+        })
+        .handleError((error) {
+          debugPrint('getFriendsListStream error: $error');
+        })
+        .asBroadcastStream();
   }
 
   Stream<List<FriendRequestModel>> getIncomingRequestsStream(String uid) {
@@ -34,10 +47,14 @@ class UserFriendService {
         .where('receiverId', isEqualTo: uid)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        return FriendRequestModel.fromMap(doc.data(), doc.id);
-      }).toList();
-    }).asBroadcastStream();
+          return snapshot.docs.map((doc) {
+            return FriendRequestModel.fromMap(doc.data(), doc.id);
+          }).toList();
+        })
+        .handleError((error) {
+          debugPrint('getIncomingRequestsStream error: $error');
+        })
+        .asBroadcastStream();
   }
 
   Future<List<UserModel>> searchUsers(String currentUid, String query) async {

@@ -19,6 +19,11 @@ class FriendsScreen extends StatelessWidget {
     return StreamBuilder<UserModel?>(
       stream: userService.getUserProfileStream(currentUid),
       builder: (context, userSnap) {
+        if (userSnap.connectionState == ConnectionState.waiting || !userSnap.hasData) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
         final currentUser = userSnap.data;
         if (currentUser == null) {
           return const Scaffold(

@@ -1,5 +1,8 @@
 import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../models/user_model.dart';
 
 enum CallStatus { ringing, accepted, rejected, ended }
@@ -80,7 +83,9 @@ class CallModel {
 
 class CallService {
   static final CallService _instance = CallService._internal();
+
   factory CallService() => _instance;
+
   CallService._internal();
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -133,10 +138,17 @@ class CallService {
 
   /// Lắng nghe trạng thái của 1 cuộc gọi cụ thể
   Stream<CallModel?> getCallStream(String callId) {
-    return _firestore.collection('calls').doc(callId).snapshots().map((snapshot) {
-      if (!snapshot.exists || snapshot.data() == null) return null;
-      return CallModel.fromMap(snapshot.data()!, snapshot.id);
-    });
+    return _firestore
+        .collection('calls')
+        .doc(callId)
+        .snapshots()
+        .map((snapshot) {
+          if (!snapshot.exists || snapshot.data() == null) return null;
+          return CallModel.fromMap(snapshot.data()!, snapshot.id);
+        })
+        .handleError((error) {
+          debugPrint('getCallStream error: $error');
+        });
   }
 
   /// Lắng nghe cuộc gọi đến cho người dùng hiện tại
@@ -147,7 +159,12 @@ class CallService {
         .where('status', isEqualTo: 'ringing')
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => CallModel.fromMap(doc.data(), doc.id)).toList();
-    });
+          return snapshot.docs
+              .map((doc) => CallModel.fromMap(doc.data(), doc.id))
+              .toList();
+        })
+        .handleError((error) {
+          debugPrint('listenToIncomingCalls error: $error');
+        });
   }
 }
