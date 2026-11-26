@@ -5,6 +5,7 @@ import '../../main.dart';
 import '../../models/post_model.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
+import '../../services/data_sync_service.dart';
 import '../../services/post_service.dart';
 import '../../services/user_friend_service.dart';
 import '../feed/feed_screen.dart';
@@ -752,6 +753,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
 
+                  ListTile(
+                    leading: const Icon(Icons.cloud_sync_rounded, color: Colors.blueAccent),
+                    title: const Text('Đồng bộ dữ liệu từ Firebase'),
+                    subtitle: const Text('Tải & khôi phục hồ sơ, bài viết, bình luận & bạn bè'),
+                    trailing: const Icon(Icons.sync_rounded, color: Colors.blueAccent),
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('⏳ Đang đồng bộ dữ liệu từ Firebase...'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                      final count = await DataSyncService().syncDataFromFirebase();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('🎉 Đã đồng bộ thành công $count mục dữ liệu từ Firebase!'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
+                  ),
                   ListTile(
                     leading: const Icon(Icons.notifications_active_outlined),
                     title: const Text('Thông báo ứng dụng'),

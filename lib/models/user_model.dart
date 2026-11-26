@@ -30,14 +30,31 @@ class UserModel {
   }
 
   factory UserModel.fromMap(Map<String, dynamic> map, String documentId) {
-    return UserModel(
-      uid: documentId,
-      email: map['email'] ?? '',
-      displayName: map['displayName'] ?? '',
-      bio: map['bio'] ?? '',
-      avatarUrl: map['avatarUrl'] ?? '',
-      coverUrl: map['coverUrl'] ?? '',
-      friendIds: List<String>.from(map['friendIds'] ?? []),
-    );
+    try {
+      List<String> friends = [];
+      if (map['friendIds'] is List) {
+        friends = (map['friendIds'] as List).map((e) => e.toString()).toList();
+      }
+
+      return UserModel(
+        uid: documentId,
+        email: map['email']?.toString() ?? '',
+        displayName: map['displayName']?.toString() ?? 'Người dùng',
+        bio: map['bio']?.toString() ?? '',
+        avatarUrl: map['avatarUrl']?.toString() ?? '',
+        coverUrl: map['coverUrl']?.toString() ?? '',
+        friendIds: friends,
+      );
+    } catch (e) {
+      return UserModel(
+        uid: documentId,
+        email: map['email']?.toString() ?? '',
+        displayName: map['displayName']?.toString() ?? 'Người dùng',
+        bio: map['bio']?.toString() ?? '',
+        avatarUrl: map['avatarUrl']?.toString() ?? '',
+        coverUrl: map['coverUrl']?.toString() ?? '',
+        friendIds: [],
+      );
+    }
   }
 }

@@ -40,22 +40,42 @@ class NotificationModel {
   }
 
   factory NotificationModel.fromMap(Map<String, dynamic> map, String documentId) {
-    var timestamp = map['createdAt'];
-    DateTime date = DateTime.now();
-    if (timestamp is Timestamp) {
-      date = timestamp.toDate();
+    try {
+      var timestamp = map['createdAt'];
+      DateTime date = DateTime.now();
+      if (timestamp is Timestamp) {
+        date = timestamp.toDate();
+      } else if (timestamp is int) {
+        date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      } else if (timestamp is String) {
+        date = DateTime.tryParse(timestamp) ?? DateTime.now();
+      }
+
+      return NotificationModel(
+        notificationId: documentId,
+        recipientId: map['recipientId']?.toString() ?? '',
+        senderId: map['senderId']?.toString() ?? '',
+        senderName: map['senderName']?.toString() ?? '',
+        senderAvatar: map['senderAvatar']?.toString() ?? '',
+        type: map['type']?.toString() ?? 'like',
+        postId: map['postId']?.toString() ?? '',
+        text: map['text']?.toString() ?? '',
+        isRead: map['isRead'] == true,
+        createdAt: date,
+      );
+    } catch (e) {
+      return NotificationModel(
+        notificationId: documentId,
+        recipientId: map['recipientId']?.toString() ?? '',
+        senderId: map['senderId']?.toString() ?? '',
+        senderName: map['senderName']?.toString() ?? '',
+        senderAvatar: map['senderAvatar']?.toString() ?? '',
+        type: 'like',
+        postId: '',
+        text: '',
+        isRead: false,
+        createdAt: DateTime.now(),
+      );
     }
-    return NotificationModel(
-      notificationId: documentId,
-      recipientId: map['recipientId'] ?? '',
-      senderId: map['senderId'] ?? '',
-      senderName: map['senderName'] ?? '',
-      senderAvatar: map['senderAvatar'] ?? '',
-      type: map['type'] ?? 'like',
-      postId: map['postId'] ?? '',
-      text: map['text'] ?? '',
-      isRead: map['isRead'] ?? false,
-      createdAt: date,
-    );
   }
 }

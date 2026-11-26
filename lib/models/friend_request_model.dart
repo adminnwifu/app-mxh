@@ -28,18 +28,34 @@ class FriendRequestModel {
   }
 
   factory FriendRequestModel.fromMap(Map<String, dynamic> map, String documentId) {
-    var timestamp = map['createdAt'];
-    DateTime date = DateTime.now();
-    if (timestamp is Timestamp) {
-      date = timestamp.toDate();
+    try {
+      var timestamp = map['createdAt'];
+      DateTime date = DateTime.now();
+      if (timestamp is Timestamp) {
+        date = timestamp.toDate();
+      } else if (timestamp is int) {
+        date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      } else if (timestamp is String) {
+        date = DateTime.tryParse(timestamp) ?? DateTime.now();
+      }
+
+      return FriendRequestModel(
+        requestId: documentId,
+        senderId: map['senderId']?.toString() ?? '',
+        senderName: map['senderName']?.toString() ?? '',
+        senderAvatar: map['senderAvatar']?.toString() ?? '',
+        receiverId: map['receiverId']?.toString() ?? '',
+        createdAt: date,
+      );
+    } catch (e) {
+      return FriendRequestModel(
+        requestId: documentId,
+        senderId: map['senderId']?.toString() ?? '',
+        senderName: map['senderName']?.toString() ?? '',
+        senderAvatar: map['senderAvatar']?.toString() ?? '',
+        receiverId: map['receiverId']?.toString() ?? '',
+        createdAt: DateTime.now(),
+      );
     }
-    return FriendRequestModel(
-      requestId: documentId,
-      senderId: map['senderId'] ?? '',
-      senderName: map['senderName'] ?? '',
-      senderAvatar: map['senderAvatar'] ?? '',
-      receiverId: map['receiverId'] ?? '',
-      createdAt: date,
-    );
   }
 }

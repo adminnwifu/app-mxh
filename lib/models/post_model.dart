@@ -56,30 +56,56 @@ class PostModel {
   }
 
   factory PostModel.fromMap(Map<String, dynamic> map, String documentId) {
-    var timestamp = map['createdAt'];
-    DateTime date = DateTime.now();
-    if (timestamp is Timestamp) {
-      date = timestamp.toDate();
-    }
+    try {
+      var timestamp = map['createdAt'];
+      DateTime date = DateTime.now();
+      if (timestamp is Timestamp) {
+        date = timestamp.toDate();
+      } else if (timestamp is int) {
+        date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      } else if (timestamp is String) {
+        date = DateTime.tryParse(timestamp) ?? DateTime.now();
+      }
 
-    Map<String, String> reactionsMap = {};
-    if (map['reactions'] != null && map['reactions'] is Map) {
-      (map['reactions'] as Map).forEach((key, value) {
-        reactionsMap[key.toString()] = value.toString();
-      });
-    }
+      Map<String, String> reactionsMap = {};
+      if (map['reactions'] is Map) {
+        (map['reactions'] as Map).forEach((key, value) {
+          reactionsMap[key.toString()] = value.toString();
+        });
+      }
 
-    return PostModel(
-      postId: documentId,
-      authorId: map['authorId'] ?? '',
-      authorName: map['authorName'] ?? '',
-      authorAvatar: map['authorAvatar'] ?? '',
-      content: map['content'] ?? '',
-      visibility: map['visibility'] ?? 'public',
-      likes: List<String>.from(map['likes'] ?? []),
-      reactions: reactionsMap,
-      commentCount: map['commentCount'] ?? 0,
-      createdAt: date,
-    );
+      List<String> likesList = [];
+      if (map['likes'] is List) {
+        likesList = (map['likes'] as List).map((e) => e.toString()).toList();
+      }
+
+      return PostModel(
+        postId: documentId,
+        authorId: map['authorId']?.toString() ?? '',
+        authorName: map['authorName']?.toString() ?? 'Người dùng',
+        authorAvatar: map['authorAvatar']?.toString() ?? '',
+        content: map['content']?.toString() ?? '',
+        visibility: map['visibility']?.toString() ?? 'public',
+        likes: likesList,
+        reactions: reactionsMap,
+        commentCount: (map['commentCount'] is int)
+            ? map['commentCount']
+            : (int.tryParse(map['commentCount']?.toString() ?? '0') ?? 0),
+        createdAt: date,
+      );
+    } catch (e) {
+      return PostModel(
+        postId: documentId,
+        authorId: map['authorId']?.toString() ?? '',
+        authorName: map['authorName']?.toString() ?? 'Người dùng',
+        authorAvatar: map['authorAvatar']?.toString() ?? '',
+        content: map['content']?.toString() ?? '',
+        visibility: 'public',
+        likes: [],
+        reactions: {},
+        commentCount: 0,
+        createdAt: DateTime.now(),
+      );
+    }
   }
 }

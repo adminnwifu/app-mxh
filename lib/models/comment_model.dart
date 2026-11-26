@@ -57,31 +57,53 @@ class CommentModel {
   }
 
   factory CommentModel.fromMap(Map<String, dynamic> map, String documentId) {
-    var timestamp = map['createdAt'];
-    DateTime date = DateTime.now();
-    if (timestamp is Timestamp) {
-      date = timestamp.toDate();
-    }
+    try {
+      var timestamp = map['createdAt'];
+      DateTime date = DateTime.now();
+      if (timestamp is Timestamp) {
+        date = timestamp.toDate();
+      } else if (timestamp is int) {
+        date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      } else if (timestamp is String) {
+        date = DateTime.tryParse(timestamp) ?? DateTime.now();
+      }
 
-    Map<String, String> reactionsMap = {};
-    if (map['reactions'] != null && map['reactions'] is Map) {
-      (map['reactions'] as Map).forEach((key, value) {
-        reactionsMap[key.toString()] = value.toString();
-      });
-    }
+      Map<String, String> reactionsMap = {};
+      if (map['reactions'] is Map) {
+        (map['reactions'] as Map).forEach((key, value) {
+          reactionsMap[key.toString()] = value.toString();
+        });
+      }
 
-    return CommentModel(
-      commentId: documentId,
-      authorId: map['authorId'] ?? '',
-      authorName: map['authorName'] ?? '',
-      authorAvatar: map['authorAvatar'] ?? '',
-      text: map['text'] ?? '',
-      imageUrl: map['imageUrl'],
-      likes: List<String>.from(map['likes'] ?? []),
-      reactions: reactionsMap,
-      replyToId: map['replyToId'],
-      replyToName: map['replyToName'],
-      createdAt: date,
-    );
+      List<String> likesList = [];
+      if (map['likes'] is List) {
+        likesList = (map['likes'] as List).map((e) => e.toString()).toList();
+      }
+
+      return CommentModel(
+        commentId: documentId,
+        authorId: map['authorId']?.toString() ?? '',
+        authorName: map['authorName']?.toString() ?? 'Người dùng',
+        authorAvatar: map['authorAvatar']?.toString() ?? '',
+        text: map['text']?.toString() ?? '',
+        imageUrl: map['imageUrl']?.toString(),
+        likes: likesList,
+        reactions: reactionsMap,
+        replyToId: map['replyToId']?.toString(),
+        replyToName: map['replyToName']?.toString(),
+        createdAt: date,
+      );
+    } catch (e) {
+      return CommentModel(
+        commentId: documentId,
+        authorId: map['authorId']?.toString() ?? '',
+        authorName: map['authorName']?.toString() ?? 'Người dùng',
+        authorAvatar: map['authorAvatar']?.toString() ?? '',
+        text: map['text']?.toString() ?? '',
+        likes: [],
+        reactions: {},
+        createdAt: DateTime.now(),
+      );
+    }
   }
 }

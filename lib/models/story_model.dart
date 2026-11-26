@@ -40,22 +40,39 @@ class StoryModel {
   }
 
   factory StoryModel.fromMap(Map<String, dynamic> map, String documentId) {
-    var timestamp = map['createdAt'];
-    DateTime date = DateTime.now();
-    if (timestamp is Timestamp) {
-      date = timestamp.toDate();
+    try {
+      var timestamp = map['createdAt'];
+      DateTime date = DateTime.now();
+      if (timestamp is Timestamp) {
+        date = timestamp.toDate();
+      } else if (timestamp is int) {
+        date = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      } else if (timestamp is String) {
+        date = DateTime.tryParse(timestamp) ?? DateTime.now();
+      }
+
+      return StoryModel(
+        storyId: documentId,
+        authorId: map['authorId']?.toString() ?? '',
+        authorName: map['authorName']?.toString() ?? 'Người dùng',
+        authorAvatar: map['authorAvatar']?.toString() ?? '',
+        type: map['type']?.toString() ?? 'text',
+        mediaUrl: map['mediaUrl']?.toString(),
+        content: map['content']?.toString() ?? '',
+        postContent: map['postContent']?.toString(),
+        postAuthorName: map['postAuthorName']?.toString(),
+        createdAt: date,
+      );
+    } catch (e) {
+      return StoryModel(
+        storyId: documentId,
+        authorId: map['authorId']?.toString() ?? '',
+        authorName: map['authorName']?.toString() ?? 'Người dùng',
+        authorAvatar: map['authorAvatar']?.toString() ?? '',
+        type: 'text',
+        content: '',
+        createdAt: DateTime.now(),
+      );
     }
-    return StoryModel(
-      storyId: documentId,
-      authorId: map['authorId'] ?? '',
-      authorName: map['authorName'] ?? '',
-      authorAvatar: map['authorAvatar'] ?? '',
-      type: map['type'] ?? 'text',
-      mediaUrl: map['mediaUrl'],
-      content: map['content'] ?? '',
-      postContent: map['postContent'],
-      postAuthorName: map['postAuthorName'],
-      createdAt: date,
-    );
   }
 }

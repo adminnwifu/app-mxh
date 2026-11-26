@@ -39,12 +39,12 @@ class PostService {
   }) {
     return _firestore
         .collection('posts')
-        .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
       final allPosts = snapshot.docs.map((doc) {
         return PostModel.fromMap(doc.data(), doc.id);
       }).toList();
+      allPosts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       return allPosts.where((post) {
         if (post.authorId == currentUserId) return true;
@@ -158,12 +158,13 @@ class PostService {
         .collection('posts')
         .doc(postId)
         .collection('comments')
-        .orderBy('createdAt', descending: false)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
+      final comments = snapshot.docs.map((doc) {
         return CommentModel.fromMap(doc.data(), doc.id);
       }).toList();
+      comments.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      return comments;
     }).asBroadcastStream();
   }
 
@@ -241,17 +242,10 @@ class PostService {
     );
 
     final postRef = _firestore.collection('posts').doc(postId);
+    final newCommentRef = postRef.collection('comments').doc();
 
-    await _firestore.runTransaction((transaction) async {
-      final postSnap = await transaction.get(postRef);
-      if (!postSnap.exists) return;
-
-      int currentCount = postSnap.data()?['commentCount'] ?? 0;
-      transaction.update(postRef, {'commentCount': currentCount + 1});
-
-      final newCommentRef = postRef.collection('comments').doc();
-      transaction.set(newCommentRef, comment.toMap());
-    });
+    await newCommentRef.set(comment.toMap());
+    await postRef.update({'commentCount': FieldValue.increment(1)}).catchError((_) {});
 
     final notifText = replyToName != null
         ? 'đã trả lời bình luận của $replyToName: "$text"'
@@ -276,15 +270,8 @@ class PostService {
     final postRef = _firestore.collection('posts').doc(postId);
     final commentRef = postRef.collection('comments').doc(commentId);
 
-    await _firestore.runTransaction((transaction) async {
-      final postSnap = await transaction.get(postRef);
-      if (postSnap.exists) {
-        int currentCount = postSnap.data()?['commentCount'] ?? 1;
-        int newCount = (currentCount - 1).clamp(0, 999999);
-        transaction.update(postRef, {'commentCount': newCount});
-      }
-      transaction.delete(commentRef);
-    });
+    await commentRef.delete();
+    await postRef.update({'commentCount': FieldValue.increment(-1)}).catchError((_) {});
   }
 
   /// Chỉnh sửa nội dung bình luận
