@@ -1,10 +1,42 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../models/friend_request_model.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
+import '../../services/chat_service.dart';
 import '../../services/user_friend_service.dart';
 import '../chat/chat_screen.dart';
-import '../profile/user_profile_detail_screen.dart';
+
+ImageProvider? getSmartImageProvider(String? pathOrUrl) {
+  if (pathOrUrl == null || pathOrUrl.isEmpty) return null;
+  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
+    return NetworkImage(pathOrUrl);
+  }
+  final file = File(pathOrUrl);
+  if (file.existsSync()) {
+    return FileImage(file);
+  }
+  return NetworkImage(pathOrUrl);
+}
+
+Widget buildUserAvatar({
+  required String avatarUrl,
+  required double radius,
+  required bool isDark,
+}) {
+  final imageProvider = getSmartImageProvider(avatarUrl);
+  return CircleAvatar(
+    radius: radius,
+    backgroundColor: isDark ? const Color(0xFF334155) : Colors.grey.shade300,
+    backgroundImage: imageProvider,
+    onBackgroundImageError: imageProvider != null ? (e, s) {} : null,
+    child: Icon(
+      Icons.person,
+      size: radius * 1.1,
+      color: isDark ? Colors.white70 : Colors.grey.shade600,
+    ),
+  );
+}
 
 class FriendsScreen extends StatelessWidget {
   const FriendsScreen({super.key});
@@ -85,6 +117,8 @@ class _FriendsListTabWidgetState extends State<_FriendsListTabWidget>
   Widget build(BuildContext context) {
     super.build(context);
     final userService = UserFriendService();
+    final chatService = ChatService();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return StreamBuilder<List<UserModel>>(
       stream: userService.getFriendsListStream(widget.currentUser.friendIds),
@@ -95,87 +129,93 @@ class _FriendsListTabWidgetState extends State<_FriendsListTabWidget>
         }
 
         final friends = List<UserModel>.from(friendSnap.data ?? []);
-        friends.sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
         if (friends.isEmpty) {
-          return Builder(
-            builder: (context) {
-              final isDark = Theme.of(context).brightness == Brightness.dark;
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.people_outline_rounded,
-                        size: 64, color: Colors.grey.shade400),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Bạn chưa có người bạn nào trong danh bạ.\nHãy tìm kiếm người dùng mới ở thanh tìm kiếm!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: isDark ? Colors.white70 : Colors.black54,
-                      ),
-                    ),
-                  ],
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.people_outline_rounded,
+                    size: 64, color: Colors.grey.shade400),
+                const SizedBox(height: 12),
+                Text(
+                  'Bạn chưa có người bạn nào trong danh bạ.\nHãy tìm kiếm người dùng mới ở thanh tìm kiếm!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
                 ),
-              );
-            },
+              ],
+            ),
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          itemCount: friends.length,
-          itemBuilder: (context, index) {
-            final friend = friends[index];
-            return Card(
-              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              child: ListTile(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => UserProfileDetailScreen(
-                        targetUser: friend,
-                        currentUser: widget.currentUser,
+        return StreamBuilder<Map<String, DateTime>>(
+          stream: chatService.getLastMessageTimestampsStream(widget.currentUser.uid),
+          builder: (context, timeSnap) {
+            final lastMessageMap = timeSnap.data ?? {};
+
+            // SẮP XẾP ƯU TIÊN: BẠN BÈ CÓ TIN NHẮN MỚI NẤT ĐƯỢC ĐẨY LÊN ĐẦU TRANG
+            friends.sort((a, b) {
+              final timeA = lastMessageMap[a.uid];
+              final timeB = lastMessageMap[b.uid];
+
+              if (timeA != null && timeB != null) {
+                return timeB.compareTo(timeA); // Mới nhất xếp trước
+              } else if (timeA != null) {
+                return -1;
+              } else if (timeB != null) {
+                return 1;
+              } else {
+                return a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase());
+              }
+            });
+
+            return ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              itemCount: friends.length,
+              itemBuilder: (context, index) {
+                final friend = friends[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  child: ListTile(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatScreen(
+                            currentUser: widget.currentUser,
+                            friendUser: friend,
+                          ),
+                        ),
+                      );
+                    },
+                    leading: buildUserAvatar(
+                      avatarUrl: friend.avatarUrl,
+                      radius: 22,
+                      isDark: isDark,
+                    ),
+                    title: Text(
+                      friend.displayName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
                       ),
                     ),
-                  );
-                },
-                leading: CircleAvatar(
-                  radius: 22,
-                  backgroundImage: friend.avatarUrl.isNotEmpty
-                      ? NetworkImage(friend.avatarUrl)
-                      : null,
-                  child: friend.avatarUrl.isEmpty
-                      ? const Icon(Icons.person)
-                      : null,
-                ),
-                title: Text(
-                  friend.displayName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-                subtitle: Text(
-                  friend.email,
-                  style: const TextStyle(fontSize: 12),
-                ),
-                trailing: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ChatScreen(
-                          currentUser: widget.currentUser,
-                          friendUser: friend,
-                        ),
+                    subtitle: Text(
+                      friend.email,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.white70 : Colors.black54,
                       ),
-                    );
-                  },
-                  icon: const Icon(Icons.chat_bubble_rounded, size: 16),
-                  label: const Text('Nhắn tin'),
-                ),
-              ),
+                    ),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                      color: isDark ? Colors.white38 : Colors.grey.shade400,
+                    ),
+                  ),
+                );
+              },
             );
           },
         );

@@ -24,11 +24,19 @@ class ChatService {
       createdAt: DateTime.now(),
     );
 
-    await _firestore
-        .collection('chat_rooms')
-        .doc(chatRoomId)
-        .collection('messages')
-        .add(message.toMap());
+    final chatRoomRef = _firestore.collection('chat_rooms').doc(chatRoomId);
+
+    // Lưu tin nhắn mới vào subcollection messages
+    await chatRoomRef.collection('messages').add(message.toMap());
+
+    // Cập nhật thông tin cuộc trò chuyện gần đây lên parent doc (Giúp xếp hạng đẩy người nhắn tin mới lên đầu)
+    await chatRoomRef.set({
+      'chatRoomId': chatRoomId,
+      'participants': [senderId, receiverId],
+      'lastMessageText': text,
+      'lastMessageSenderId': senderId,
+      'lastMessageAt': Timestamp.now(),
+    }, SetOptions(merge: true));
   }
 
   Stream<List<MessageModel>> getMessagesStream(String userId1, String userId2) {
@@ -44,5 +52,32 @@ class ChatService {
         return MessageModel.fromMap(doc.data(), doc.id);
       }).toList();
     });
+  }
+
+  /// Lắng nghe bản đồ thời gian tin nhắn mới nhất giữa người dùng hiện tại và các bạn bè
+  Stream<Map<String, DateTime>> getLastMessageTimestampsStream(String currentUserId) {
+    return _firestore
+        .collection('chat_rooms')
+        .where('participants', arrayContains: currentUserId)
+        .snapshots()
+        .map((snapshot) {
+      Map<String, DateTime> map = {};
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final List<dynamic> participants = data['participants'] ?? [];
+        final otherId = participants.firstWhere(
+          (id) => id.toString() != currentUserId,
+          orElse: () => '',
+        ).toString();
+
+        if (otherId.isNotEmpty) {
+          final lastAt = data['lastMessageAt'];
+          if (lastAt is Timestamp) {
+            map[otherId] = lastAt.toDate();
+          }
+        }
+      }
+      return map;
+    }).asBroadcastStream();
   }
 }

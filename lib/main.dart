@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 import 'features/auth/login_screen.dart';
 import 'features/chat/incoming_call_dialog.dart';
+import 'features/contacts/contacts_screen.dart';
 import 'features/feed/feed_screen.dart';
 import 'features/friends/friends_screen.dart';
 import 'features/profile/profile_screen.dart';
@@ -204,6 +205,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<Widget> _screens = const [
     KeyedSubtree(key: ValueKey('feed_tab'), child: FeedScreen()),
     KeyedSubtree(key: ValueKey('friends_tab'), child: FriendsScreen()),
+    KeyedSubtree(key: ValueKey('contacts_tab'), child: ContactsScreen()),
     KeyedSubtree(key: ValueKey('profile_tab'), child: ProfileScreen()),
   ];
 
@@ -284,6 +286,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               icon: const Icon(Icons.people_outline_rounded),
               selectedIcon: Icon(Icons.people_rounded, color: primary),
               label: 'Bạn bè',
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.contacts_outlined),
+              selectedIcon: Icon(Icons.contacts_rounded, color: primary),
+              label: 'Danh bạ',
             ),
             NavigationDestination(
               icon: const Icon(Icons.person_outline_rounded),

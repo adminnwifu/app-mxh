@@ -843,23 +843,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return StreamBuilder<UserModel?>(
       stream: userService.getUserProfileStream(currentUid),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting || !snapshot.hasData) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-        final user = snapshot.data;
-        if (user == null) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        if (user == null) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+        final fbUser = AuthService().currentUser;
+        final user = snapshot.data ?? UserModel(
+          uid: currentUid,
+          email: fbUser?.email ?? '',
+          displayName: fbUser?.displayName ?? (fbUser != null && fbUser.email != null && fbUser.email!.contains('@') ? fbUser.email!.split('@').first : 'Người dùng'),
+          avatarUrl: fbUser?.photoURL ?? '',
+        );
 
         return Scaffold(
           appBar: AppBar(
