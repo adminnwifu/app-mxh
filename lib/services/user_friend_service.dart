@@ -7,7 +7,15 @@ class UserFriendService {
 
   Stream<UserModel?> getUserProfileStream(String uid) {
     return _firestore.collection('users').doc(uid).snapshots().map((doc) {
-      if (!doc.exists) return null;
+      if (!doc.exists) {
+        final fbUser = _firestore.app.options.projectId.isNotEmpty ? null : null;
+        return UserModel(
+          uid: uid,
+          email: '',
+          displayName: 'Người dùng',
+          avatarUrl: '',
+        );
+      }
       return UserModel.fromMap(doc.data()!, doc.id);
     }).asBroadcastStream();
   }

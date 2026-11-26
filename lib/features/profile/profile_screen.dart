@@ -22,6 +22,26 @@ ImageProvider? getSmartImageProvider(String? pathOrUrl) {
   return NetworkImage(pathOrUrl);
 }
 
+/// Helper hiển thị CircleAvatar mượt mà không bao giờ bị màu tím/màu lam rỗng
+Widget buildUserAvatar({
+  required String avatarUrl,
+  required double radius,
+  required bool isDark,
+}) {
+  final imageProvider = getSmartImageProvider(avatarUrl);
+  return CircleAvatar(
+    radius: radius,
+    backgroundColor: isDark ? const Color(0xFF334155) : Colors.grey.shade300,
+    backgroundImage: imageProvider,
+    onBackgroundImageError: imageProvider != null ? (e, s) {} : null,
+    child: Icon(
+      Icons.person,
+      size: radius * 1.1,
+      color: isDark ? Colors.white70 : Colors.grey.shade600,
+    ),
+  );
+}
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -818,12 +838,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return StreamBuilder<UserModel?>(
       stream: userService.getUserProfileStream(currentUid),
       builder: (context, snapshot) {
-        final user = snapshot.data;
-        if (user == null) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+        final fbUser = AuthService().currentUser;
+        final user = snapshot.data ?? UserModel(
+          uid: currentUid,
+          email: fbUser?.email ?? '',
+          displayName: fbUser?.displayName ?? (fbUser?.email?.split('@').first ?? 'Người dùng'),
+          avatarUrl: fbUser?.photoURL ?? '',
+        );
 
         return Scaffold(
           appBar: AppBar(
@@ -902,12 +923,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               color: Theme.of(context).scaffoldBackgroundColor,
                               shape: BoxShape.circle,
                             ),
-                            child: CircleAvatar(
+                            child: buildUserAvatar(
+                              avatarUrl: user.avatarUrl,
                               radius: 46,
-                              backgroundImage: getSmartImageProvider(user.avatarUrl),
-                              child: user.avatarUrl.isEmpty
-                                  ? const Icon(Icons.person, size: 46)
-                                  : null,
+                              isDark: Theme.of(context).brightness == Brightness.dark,
                             ),
                           ),
                         ),

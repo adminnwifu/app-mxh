@@ -74,6 +74,26 @@ ImageProvider? getSmartImageProvider(String? pathOrUrl) {
   return NetworkImage(pathOrUrl);
 }
 
+/// Helper hiển thị CircleAvatar mượt mà không bao giờ bị màu tím/màu lam rỗng
+Widget buildUserAvatar({
+  required String avatarUrl,
+  required double radius,
+  required bool isDark,
+}) {
+  final imageProvider = getSmartImageProvider(avatarUrl);
+  return CircleAvatar(
+    radius: radius,
+    backgroundColor: isDark ? const Color(0xFF334155) : Colors.grey.shade300,
+    backgroundImage: imageProvider,
+    onBackgroundImageError: imageProvider != null ? (e, s) {} : null,
+    child: Icon(
+      Icons.person,
+      size: radius * 1.1,
+      color: isDark ? Colors.white70 : Colors.grey.shade600,
+    ),
+  );
+}
+
 /// Widget thu gọn văn bản dài cho Bài viết và Bình luận với nút Xem thêm / Thu gọn
 class ExpandableTextWidget extends StatefulWidget {
   final String text;
@@ -197,12 +217,13 @@ class FeedScreen extends StatelessWidget {
     return StreamBuilder<UserModel?>(
       stream: userService.getUserProfileStream(currentUid),
       builder: (context, userSnapshot) {
-        final currentUser = userSnapshot.data;
-        if (currentUser == null) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+        final fbUser = AuthService().currentUser;
+        final currentUser = userSnapshot.data ?? UserModel(
+          uid: currentUid,
+          email: fbUser?.email ?? '',
+          displayName: fbUser?.displayName ?? (fbUser?.email?.split('@').first ?? 'Người dùng'),
+          avatarUrl: fbUser?.photoURL ?? '',
+        );
 
         return Scaffold(
           appBar: AppBar(
@@ -344,14 +365,10 @@ class FeedScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(12.0),
                       child: Row(
                         children: [
-                          CircleAvatar(
+                          buildUserAvatar(
+                            avatarUrl: currentUser.avatarUrl,
                             radius: 18,
-                            backgroundImage: currentUser.avatarUrl.isNotEmpty
-                                ? NetworkImage(currentUser.avatarUrl)
-                                : null,
-                            child: currentUser.avatarUrl.isEmpty
-                                ? const Icon(Icons.person, size: 18)
-                                : null,
+                            isDark: Theme.of(context).brightness == Brightness.dark,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -467,9 +484,11 @@ class FeedScreen extends StatelessWidget {
                 right: 0,
                 height: 125,
                 child: user.avatarUrl.isNotEmpty
-                    ? Image.network(
+                    ? buildSmartImage(
                         user.avatarUrl,
                         fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: 125,
                       )
                     : Container(
                         color: Colors.grey.shade800,
@@ -625,14 +644,10 @@ class FeedScreen extends StatelessWidget {
                     ),
                     shape: BoxShape.circle,
                   ),
-                  child: CircleAvatar(
+                  child: buildUserAvatar(
+                    avatarUrl: story.authorAvatar,
                     radius: 16,
-                    backgroundImage: story.authorAvatar.isNotEmpty
-                        ? NetworkImage(story.authorAvatar)
-                        : null,
-                    child: story.authorAvatar.isEmpty
-                        ? const Icon(Icons.person, size: 16)
-                        : null,
+                    isDark: true,
                   ),
                 ),
               ),
@@ -1673,14 +1688,10 @@ class _CreatePostModalSheetState extends State<_CreatePostModalSheet> {
               const Divider(),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
+                leading: buildUserAvatar(
+                  avatarUrl: widget.currentUser.avatarUrl,
                   radius: 22,
-                  backgroundImage: widget.currentUser.avatarUrl.isNotEmpty
-                      ? NetworkImage(widget.currentUser.avatarUrl)
-                      : null,
-                  child: widget.currentUser.avatarUrl.isEmpty
-                      ? const Icon(Icons.person)
-                      : null,
+                  isDark: isDark,
                 ),
                 title: Text(
                   widget.currentUser.displayName,
@@ -2054,10 +2065,10 @@ class _PostCardWidgetState extends State<PostCardWidget> {
 
                 return Row(
                   children: [
-                    CircleAvatar(
+                    buildUserAvatar(
+                      avatarUrl: authorAvatar,
                       radius: 20,
-                      backgroundImage: getSmartImageProvider(authorAvatar),
-                      child: (authorAvatar.isEmpty) ? const Icon(Icons.person, size: 20) : null,
+                      isDark: isDark,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -2438,12 +2449,10 @@ class _CommentBottomSheetState extends State<CommentBottomSheet> {
                                 final commentAvatar = (cAuthorSnap.data?.avatarUrl.isNotEmpty == true)
                                     ? cAuthorSnap.data!.avatarUrl
                                     : c.authorAvatar;
-                                return CircleAvatar(
+                                return buildUserAvatar(
+                                  avatarUrl: commentAvatar,
                                   radius: isReply ? 14 : 17,
-                                  backgroundImage: getSmartImageProvider(commentAvatar),
-                                  child: (commentAvatar.isEmpty)
-                                      ? Icon(Icons.person, size: isReply ? 14 : 17)
-                                      : null,
+                                  isDark: Theme.of(context).brightness == Brightness.dark,
                                 );
                               },
                             ),

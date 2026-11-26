@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../models/friend_request_model.dart';
 import '../../models/user_model.dart';
@@ -5,6 +6,37 @@ import '../../services/auth_service.dart';
 import '../../services/user_friend_service.dart';
 import '../chat/chat_screen.dart';
 import '../profile/user_profile_detail_screen.dart';
+
+ImageProvider? getSmartImageProvider(String? pathOrUrl) {
+  if (pathOrUrl == null || pathOrUrl.isEmpty) return null;
+  if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
+    return NetworkImage(pathOrUrl);
+  }
+  final file = File(pathOrUrl);
+  if (file.existsSync()) {
+    return FileImage(file);
+  }
+  return NetworkImage(pathOrUrl);
+}
+
+Widget buildUserAvatar({
+  required String avatarUrl,
+  required double radius,
+  required bool isDark,
+}) {
+  final imageProvider = getSmartImageProvider(avatarUrl);
+  return CircleAvatar(
+    radius: radius,
+    backgroundColor: isDark ? const Color(0xFF334155) : Colors.grey.shade300,
+    backgroundImage: imageProvider,
+    onBackgroundImageError: imageProvider != null ? (e, s) {} : null,
+    child: Icon(
+      Icons.person,
+      size: radius * 1.1,
+      color: isDark ? Colors.white70 : Colors.grey.shade600,
+    ),
+  );
+}
 
 class FriendsScreen extends StatelessWidget {
   const FriendsScreen({super.key});
@@ -19,19 +51,20 @@ class FriendsScreen extends StatelessWidget {
     return StreamBuilder<UserModel?>(
       stream: userService.getUserProfileStream(currentUid),
       builder: (context, userSnap) {
-        final currentUser = userSnap.data;
-        if (currentUser == null) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+        final fbUser = AuthService().currentUser;
+        final currentUser = userSnap.data ?? UserModel(
+          uid: currentUid,
+          email: fbUser?.email ?? '',
+          displayName: fbUser?.displayName ?? (fbUser?.email?.split('@').first ?? 'Người dùng'),
+          avatarUrl: fbUser?.photoURL ?? '',
+        );
 
         return DefaultTabController(
           length: 2,
           child: Scaffold(
             appBar: AppBar(
               title: const Text(
-                'Bạn bè',
+                'Danh bạ & Bạn bè',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               bottom: TabBar(
@@ -135,14 +168,10 @@ class _FriendsListTabWidgetState extends State<_FriendsListTabWidget>
                     ),
                   );
                 },
-                leading: CircleAvatar(
+                leading: buildUserAvatar(
+                  avatarUrl: friend.avatarUrl,
                   radius: 22,
-                  backgroundImage: friend.avatarUrl.isNotEmpty
-                      ? NetworkImage(friend.avatarUrl)
-                      : null,
-                  child: friend.avatarUrl.isEmpty
-                      ? const Icon(Icons.person)
-                      : null,
+                  isDark: Theme.of(context).brightness == Brightness.dark,
                 ),
                 title: Text(
                   friend.displayName,
@@ -245,14 +274,10 @@ class _IncomingRequestsTabWidgetState extends State<_IncomingRequestsTabWidget>
                 padding: const EdgeInsets.all(12.0),
                 child: Row(
                   children: [
-                    CircleAvatar(
+                    buildUserAvatar(
+                      avatarUrl: req.senderAvatar,
                       radius: 24,
-                      backgroundImage: req.senderAvatar.isNotEmpty
-                          ? NetworkImage(req.senderAvatar)
-                          : null,
-                      child: req.senderAvatar.isEmpty
-                          ? const Icon(Icons.person)
-                          : null,
+                      isDark: isDark,
                     ),
                     const SizedBox(width: 12),
                     Expanded(

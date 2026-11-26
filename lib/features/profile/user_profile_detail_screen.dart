@@ -64,13 +64,11 @@ class UserProfileDetailScreen extends StatelessWidget {
                                 ),
                               ),
                               child: user.coverUrl.isNotEmpty
-                                  ? Image.network(
+                                  ? buildSmartImage(
                                       user.coverUrl,
                                       fit: BoxFit.cover,
                                       width: double.infinity,
                                       height: 150,
-                                      errorBuilder: (context, error, stackTrace) =>
-                                          const SizedBox.shrink(),
                                     )
                                   : null,
                             ),
@@ -78,18 +76,14 @@ class UserProfileDetailScreen extends StatelessWidget {
                               bottom: -40,
                               child: Container(
                                 padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).scaffoldBackgroundColor,
                                   shape: BoxShape.circle,
                                 ),
-                                child: CircleAvatar(
+                                child: buildUserAvatar(
+                                  avatarUrl: user.avatarUrl,
                                   radius: 46,
-                                  backgroundImage: user.avatarUrl.isNotEmpty
-                                      ? NetworkImage(user.avatarUrl)
-                                      : null,
-                                  child: user.avatarUrl.isEmpty
-                                      ? const Icon(Icons.person, size: 46)
-                                      : null,
+                                  isDark: Theme.of(context).brightness == Brightness.dark,
                                 ),
                               ),
                             ),
