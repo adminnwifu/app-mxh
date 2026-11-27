@@ -198,41 +198,111 @@ class _ChatScreenState extends State<ChatScreen> {
 
                     if (isCallMsg) {
                       final isVideo = msg.text.contains('🎥') || msg.text.contains('video');
-                      return Center(
+                      final isFailedCall = msg.text.contains('nhỡ') ||
+                          msg.text.contains('từ chối') ||
+                          msg.text.contains('hủy');
+
+                      String callTitle = msg.text
+                          .replaceAll('🎥 ', '')
+                          .replaceAll('📞 ', '');
+                      if (callTitle == 'Cuộc gọi thoại nhỡ') {
+                        callTitle = 'Đã nhỡ cuộc gọi thoại';
+                      } else if (callTitle == 'Cuộc gọi video nhỡ') {
+                        callTitle = 'Đã nhỡ cuộc gọi video';
+                      }
+
+                      return Align(
+                        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                         child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: isVideo ? Colors.blueAccent.withValues(alpha: 0.5) : Colors.green.withValues(alpha: 0.5),
-                              width: 1.2,
-                            ),
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          padding: const EdgeInsets.all(12),
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.72,
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Icon(
-                                isVideo ? Icons.videocam_rounded : Icons.call_rounded,
-                                size: 16,
-                                color: isVideo ? Colors.blueAccent : Colors.green,
+                              // TOP ROW: ICON + TITLE & TIME
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: isFailedCall
+                                          ? const Color(0xFFFF3B30) // Red
+                                          : const Color(0xFF34C759), // Green
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      isFailedCall
+                                          ? Icons.phone_missed_rounded
+                                          : (isVideo ? Icons.videocam_rounded : Icons.phone_in_talk_rounded),
+                                      size: 22,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          callTitle,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: isDark ? Colors.white : Colors.black87,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          timeStr,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: isDark ? Colors.white54 : Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 8),
-                              Text(
-                                msg.text,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: onSurface,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                timeStr,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: mutedTextColor,
+                              const SizedBox(height: 12),
+
+                              // BOTTOM BUTTON: "Gọi lại" (CALL BACK)
+                              InkWell(
+                                onTap: () => _navigateToCallScreen(isVideo),
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF48484A) : Colors.grey.shade300,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      'Gọi lại',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : Colors.black87,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
