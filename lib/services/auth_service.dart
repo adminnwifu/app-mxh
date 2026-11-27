@@ -63,9 +63,21 @@ class AuthService {
     required String password,
     required String displayName,
   }) async {
+    final cleanEmail = email.trim().toLowerCase();
+
+    // KIỂM TRA NGHIÊM NGẶT: Mỗi Gmail chỉ dùng được 1 tài khoản duy nhất trên hệ thống
+    final existingUserQuery = await _firestore
+        .collection('users')
+        .where('email', isEqualTo: cleanEmail)
+        .get();
+
+    if (existingUserQuery.docs.isNotEmpty) {
+      throw Exception('Mỗi Gmail chỉ dùng được 1 tài khoản! Email "$cleanEmail" đã được đăng ký.');
+    }
+
     try {
       UserCredential credential = await _auth.createUserWithEmailAndPassword(
-        email: email,
+        email: cleanEmail,
         password: password,
       );
 
@@ -77,7 +89,7 @@ class AuthService {
 
         UserModel newUser = UserModel(
           uid: user.uid,
-          email: email,
+          email: cleanEmail,
           displayName: displayName,
           bio: 'Xin chào, tôi mới tham gia MiniSocial!',
           avatarUrl: '',
@@ -91,7 +103,7 @@ class AuthService {
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
-        throw Exception('Tài khoản Email này đã tồn tại trên hệ thống. Vui lòng đăng nhập hoặc dùng email khác!');
+        throw Exception('Mỗi Gmail chỉ dùng được 1 tài khoản! Email "$cleanEmail" đã tồn tại trên hệ thống.');
       } else if (e.code == 'invalid-email') {
         throw Exception('Địa chỉ email không hợp lệ. Vui lòng kiểm tra lại!');
       } else if (e.code == 'weak-password') {
@@ -100,6 +112,7 @@ class AuthService {
         throw Exception(e.message ?? 'Đăng ký không thành công. Vui lòng kiểm tra lại thông tin!');
       }
     } catch (e) {
+      if (e.toString().contains('Mỗi Gmail chỉ dùng')) rethrow;
       throw Exception('Đăng ký không thành công: ${e.toString()}');
     }
   }

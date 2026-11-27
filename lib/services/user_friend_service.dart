@@ -31,7 +31,35 @@ class UserFriendService {
       final allUsers = snapshot.docs.map((doc) {
         return UserModel.fromMap(doc.data(), doc.id);
       }).toList();
-      return allUsers.where((u) => friendIds.contains(u.uid)).toList();
+
+      final rawFriends = allUsers.where((u) => friendIds.contains(u.uid)).toList();
+
+      // ƯU TIÊN TÀI KHOẢN CHÍNH "an" (an_uid_101) BÊN ẢNH 1 VÀ TRANG CHỦ FEED
+      rawFriends.sort((a, b) {
+        if (a.uid == 'an_uid_101' || a.avatarUrl.contains('random=1')) return -1;
+        if (b.uid == 'an_uid_101' || b.avatarUrl.contains('random=1')) return 1;
+        if (a.avatarUrl.isNotEmpty && b.avatarUrl.isEmpty) return -1;
+        if (a.avatarUrl.isEmpty && b.avatarUrl.isNotEmpty) return 1;
+        return 0;
+      });
+
+      // DEDUPLICATE BY EMAIL AND UID: Giữ tài khoản thực có Avatar, loại bỏ tài khoản mẫu
+      final Set<String> seenEmails = {};
+      final Set<String> seenUids = {};
+      final List<UserModel> uniqueFriends = [];
+
+      for (var f in rawFriends) {
+        final emailLower = f.email.trim().toLowerCase();
+        if (f.uid.isNotEmpty &&
+            !seenUids.contains(f.uid) &&
+            (emailLower.isEmpty || !seenEmails.contains(emailLower))) {
+          seenUids.add(f.uid);
+          if (emailLower.isNotEmpty) seenEmails.add(emailLower);
+          uniqueFriends.add(f);
+        }
+      }
+
+      return uniqueFriends;
     }).asBroadcastStream();
   }
 

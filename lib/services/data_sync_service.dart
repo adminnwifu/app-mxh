@@ -40,7 +40,7 @@ class DataSyncService {
     final currentName = firebaseUser?.displayName ??
         (firebaseUser?.email?.split('@').first ?? 'Network');
 
-    // 1. Kiểm tra và khôi phục dữ liệu người dùng mẫu
+    // 1. Kiểm tra và kết nối tài khoản bạn bè (Không tạo ghi đè nếu tài khoản thật đã tồn tại)
     final sampleUsers = [
       UserModel(
         uid: 'an_uid_101',
@@ -61,19 +61,32 @@ class DataSyncService {
     ];
 
     for (var u in sampleUsers) {
-      final docRef = _firestore.collection('users').doc(u.uid);
-      final snap = await docRef.get();
-      if (!snap.exists) {
-        await docRef.set(u.toMap());
-        syncedCount++;
-      }
-    }
+      final emailQuery = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: u.email)
+          .get();
 
-    // Cập nhật bạn bè cho user hiện tại
-    if (currentUid.isNotEmpty) {
-      await _firestore.collection('users').doc(currentUid).update({
-        'friendIds': FieldValue.arrayUnion(['an_uid_101', 'tkin_uid_102']),
-      }).catchError((_) {});
+      if (emailQuery.docs.isEmpty) {
+        final docRef = _firestore.collection('users').doc(u.uid);
+        final snap = await docRef.get();
+        if (!snap.exists) {
+          await docRef.set(u.toMap());
+          syncedCount++;
+        }
+        if (currentUid.isNotEmpty) {
+          await _firestore.collection('users').doc(currentUid).update({
+            'friendIds': FieldValue.arrayUnion([u.uid]),
+          }).catchError((_) {});
+        }
+      } else {
+        // Đã có tài khoản thật với email ciel21@gmail.com (kèm Avatar ảnh thật): Kết nối UID tài khoản thật vào bạn bè!
+        final realUserUid = emailQuery.docs.first.id;
+        if (currentUid.isNotEmpty && realUserUid != currentUid) {
+          await _firestore.collection('users').doc(currentUid).update({
+            'friendIds': FieldValue.arrayUnion([realUserUid]),
+          }).catchError((_) {});
+        }
+      }
     }
 
     // 2. Kiểm tra bộ sưu tập bài viết

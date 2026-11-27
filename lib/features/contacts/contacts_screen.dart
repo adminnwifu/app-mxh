@@ -6,6 +6,7 @@ import '../../services/user_friend_service.dart';
 import '../chat/call_screen.dart';
 import '../chat/chat_screen.dart';
 import '../friends/friends_screen.dart';
+import '../profile/user_profile_detail_screen.dart';
 
 class ContactsScreen extends StatefulWidget {
   const ContactsScreen({super.key});
@@ -170,9 +171,9 @@ class _ContactsScreenState extends State<ContactsScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => ChatScreen(
+                                      builder: (_) => UserProfileDetailScreen(
+                                        targetUser: friend,
                                         currentUser: currentUser,
-                                        friendUser: friend,
                                       ),
                                     ),
                                   );
