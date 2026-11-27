@@ -4,7 +4,6 @@ import '../../services/auth_service.dart';
 import '../../services/chat_service.dart';
 import '../../services/user_friend_service.dart';
 import '../chat/call_screen.dart';
-import '../chat/chat_screen.dart';
 import '../friends/friends_screen.dart';
 import '../profile/user_profile_detail_screen.dart';
 

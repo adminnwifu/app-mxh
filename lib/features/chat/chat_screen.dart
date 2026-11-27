@@ -193,6 +193,53 @@ class _ChatScreenState extends State<ChatScreen> {
                     final msg = messages[index];
                     final isMe = msg.senderId == widget.currentUser.uid;
                     final timeStr = DateFormat('HH:mm').format(msg.createdAt);
+                    final isDark = Theme.of(context).brightness == Brightness.dark;
+                    final isCallMsg = msg.text.contains('📞') || msg.text.contains('🎥') || msg.text.contains('Cuộc gọi');
+
+                    if (isCallMsg) {
+                      final isVideo = msg.text.contains('🎥') || msg.text.contains('video');
+                      return Center(
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isVideo ? Colors.blueAccent.withValues(alpha: 0.5) : Colors.green.withValues(alpha: 0.5),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isVideo ? Icons.videocam_rounded : Icons.call_rounded,
+                                size: 16,
+                                color: isVideo ? Colors.blueAccent : Colors.green,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                msg.text,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: onSurface,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                timeStr,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: mutedTextColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
 
                     return Align(
                       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
