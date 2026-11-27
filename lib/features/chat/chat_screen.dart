@@ -202,6 +202,123 @@ class _ChatScreenState extends State<ChatScreen> {
                     final msg = messages[index];
                     final isMe = msg.senderId == widget.currentUser.uid;
                     final timeStr = DateFormat('HH:mm').format(msg.createdAt);
+                    final isDark = Theme.of(context).brightness == Brightness.dark;
+                    final isCallMsg = msg.text.contains('📞') || msg.text.contains('🎥') || msg.text.contains('Cuộc gọi');
+
+                    if (isCallMsg) {
+                      final isVideo = msg.text.contains('🎥') || msg.text.contains('video');
+                      final isFailedCall = msg.text.contains('nhỡ') ||
+                          msg.text.contains('từ chối') ||
+                          msg.text.contains('hủy');
+
+                      String callTitle = msg.text
+                          .replaceAll('🎥 ', '')
+                          .replaceAll('📞 ', '');
+                      if (callTitle == 'Cuộc gọi thoại nhỡ') {
+                        callTitle = 'Đã nhỡ cuộc gọi thoại';
+                      } else if (callTitle == 'Cuộc gọi video nhỡ') {
+                        callTitle = 'Đã nhỡ cuộc gọi video';
+                      }
+
+                      return Align(
+                        alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          padding: const EdgeInsets.all(12),
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.72,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // TOP ROW: ICON + TITLE & TIME
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: isFailedCall
+                                          ? const Color(0xFFFF3B30) // Red
+                                          : const Color(0xFF34C759), // Green
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      isFailedCall
+                                          ? Icons.phone_missed_rounded
+                                          : (isVideo ? Icons.videocam_rounded : Icons.phone_in_talk_rounded),
+                                      size: 22,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          callTitle,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: isDark ? Colors.white : Colors.black87,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          timeStr,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: isDark ? Colors.white54 : Colors.grey.shade600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+
+                              // BOTTOM BUTTON: "Gọi lại" (CALL BACK)
+                              InkWell(
+                                onTap: () => _navigateToCallScreen(isVideo),
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF48484A) : Colors.grey.shade300,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      'Gọi lại',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.white : Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
 
                     return Align(
                       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,

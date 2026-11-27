@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import '../../services/call_service.dart';
+import '../../services/chat_service.dart';
 
 enum CallState { dialing, ringing, connected, ended }
 
@@ -115,11 +116,43 @@ class _CallScreenState extends State<CallScreen> with SingleTickerProviderStateM
     });
   }
 
+  bool _hasSavedMessage = false;
+
+  Future<void> _saveCallSummaryToChat({required bool isRejected}) async {
+    if (_hasSavedMessage) return;
+    _hasSavedMessage = true;
+
+    final callerId = widget.caller.uid;
+    final receiverId = widget.receiver.uid;
+    final callType = widget.isVideoCall ? '🎥 Cuộc gọi video' : '📞 Cuộc gọi thoại';
+
+    String text = '';
+    if (_callDurationSeconds > 0) {
+      text = '$callType • ${_formatDuration(_callDurationSeconds)}';
+    } else if (isRejected) {
+      text = '$callType bị từ chối';
+    } else {
+      text = '$callType nhỡ';
+    }
+
+    try {
+      await ChatService().sendMessage(
+        senderId: callerId,
+        receiverId: receiverId,
+        text: text,
+      );
+    } catch (e) {
+      debugPrint('Lỗi lưu lịch sử cuộc gọi: $e');
+    }
+  }
+
   void _onCallRejected({String reason = 'Cuộc gọi đã bị từ chối'}) {
     _ringTimeoutTimer?.cancel();
     _dialingTimer?.cancel();
     _durationTimer?.cancel();
     _callSubscription?.cancel();
+
+    _saveCallSummaryToChat(isRejected: true);
 
     if (_activeCallId.isNotEmpty) {
       CallService().rejectCall(_activeCallId);
@@ -158,6 +191,8 @@ class _CallScreenState extends State<CallScreen> with SingleTickerProviderStateM
     _dialingTimer?.cancel();
     _durationTimer?.cancel();
     _callSubscription?.cancel();
+
+    _saveCallSummaryToChat(isRejected: false);
 
     if (!isRemote && _activeCallId.isNotEmpty) {
       CallService().endCall(_activeCallId);
