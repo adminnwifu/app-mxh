@@ -35,8 +35,38 @@ class ChatService {
       'participants': [senderId, receiverId],
       'lastMessageText': text,
       'lastMessageSenderId': senderId,
+      'lastMessageIsRead': false,
       'lastMessageAt': Timestamp.now(),
     }, SetOptions(merge: true));
+  }
+
+  /// Đánh dấu tất cả tin nhắn trong đoạn chat đã đọc khi người dùng mở ChatScreen
+  Future<void> markMessagesAsRead(String currentUserId, String friendId) async {
+    final chatRoomId = _getChatRoomId(currentUserId, friendId);
+    final chatRoomRef = _firestore.collection('chat_rooms').doc(chatRoomId);
+
+    await chatRoomRef.set({'lastMessageIsRead': true}, SetOptions(merge: true));
+
+    final unreadQuery = await chatRoomRef
+        .collection('messages')
+        .where('receiverId', isEqualTo: currentUserId)
+        .where('isRead', isEqualTo: false)
+        .get();
+
+    final batch = _firestore.batch();
+    for (var doc in unreadQuery.docs) {
+      batch.update(doc.reference, {'isRead': true});
+    }
+    await batch.commit();
+  }
+
+  /// Lắng nghe dữ liệu tin nhắn mới nhất giữa người dùng hiện tại và bạn bè
+  Stream<Map<String, dynamic>?> getLastMessageStream(String currentUserId, String friendId) {
+    final chatRoomId = _getChatRoomId(currentUserId, friendId);
+    return _firestore.collection('chat_rooms').doc(chatRoomId).snapshots().map((doc) {
+      if (!doc.exists || doc.data() == null) return null;
+      return doc.data();
+    }).asBroadcastStream();
   }
 
   Stream<List<MessageModel>> getMessagesStream(String userId1, String userId2) {

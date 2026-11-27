@@ -68,7 +68,7 @@ class FriendsScreen extends StatelessWidget {
           child: Scaffold(
             appBar: AppBar(
               title: const Text(
-                'Bạn bè',
+                'Chat',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               bottom: TabBar(
@@ -77,7 +77,7 @@ class FriendsScreen extends StatelessWidget {
                 unselectedLabelColor: Colors.grey.shade600,
                 labelStyle: const TextStyle(fontWeight: FontWeight.bold),
                 tabs: [
-                  Tab(text: 'Bạn bè (${currentUser.friendIds.length})'),
+                  Tab(text: 'Đoạn chat (${currentUser.friendIds.length})'),
                   const Tab(text: 'Lời mời'),
                 ],
               ),
@@ -201,17 +201,86 @@ class _FriendsListTabWidgetState extends State<_FriendsListTabWidget>
                         fontSize: 15,
                       ),
                     ),
-                    subtitle: Text(
-                      friend.email,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark ? Colors.white70 : Colors.black54,
-                      ),
+                    subtitle: StreamBuilder<Map<String, dynamic>?>(
+                      stream: chatService.getLastMessageStream(widget.currentUser.uid, friend.uid),
+                      builder: (context, msgSnap) {
+                        final data = msgSnap.data;
+                        if (data == null || data['lastMessageText'] == null) {
+                          return Text(
+                            friend.email,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? Colors.white70 : Colors.black45,
+                            ),
+                          );
+                        }
+
+                        final String lastText = data['lastMessageText'] ?? '';
+                        final String senderId = data['lastMessageSenderId'] ?? '';
+                        final bool isRead = data['lastMessageIsRead'] ?? true;
+                        final bool isUnread = (senderId == friend.uid) && (!isRead);
+                        final bool isMe = senderId == widget.currentUser.uid;
+
+                        final displayText = isMe ? 'Bạn: $lastText' : lastText;
+
+                        return Text(
+                          displayText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
+                            color: isUnread
+                                ? (isDark ? Colors.white : Colors.black87)
+                                : (isDark ? Colors.white60 : Colors.black54),
+                          ),
+                        );
+                      },
                     ),
-                    trailing: Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 16,
-                      color: isDark ? Colors.white38 : Colors.grey.shade400,
+                    trailing: StreamBuilder<Map<String, dynamic>?>(
+                      stream: chatService.getLastMessageStream(widget.currentUser.uid, friend.uid),
+                      builder: (context, msgSnap) {
+                        final data = msgSnap.data;
+                        final String senderId = data?['lastMessageSenderId'] ?? '';
+                        final bool isRead = data?['lastMessageIsRead'] ?? true;
+                        final bool isUnread = (senderId == friend.uid) && (!isRead);
+                        final primaryColor = Theme.of(context).colorScheme.primary;
+
+                        if (isUnread) {
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: primaryColor,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: primaryColor.withValues(alpha: 0.6),
+                                      blurRadius: 6,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 14,
+                                color: primaryColor,
+                              ),
+                            ],
+                          );
+                        }
+
+                        return Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 14,
+                          color: isDark ? Colors.white38 : Colors.grey.shade400,
+                        );
+                      },
                     ),
                   ),
                 );

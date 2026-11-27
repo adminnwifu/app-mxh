@@ -99,11 +99,36 @@ class NotificationScreen extends StatelessWidget {
                     final notif = notifications[index];
                     final isLike = notif.type == 'like';
                     final timeStr = DateFormat('dd/MM HH:mm').format(notif.createdAt);
+                    final isDark = Theme.of(context).brightness == Brightness.dark;
+                    final primaryColor = Theme.of(context).colorScheme.primary;
+
+                    final cardBg = notif.isRead
+                        ? (isDark ? const Color(0xFF1E293B) : Colors.white)
+                        : (isDark ? const Color(0xFF2A2250) : const Color(0xFFEEF2FF));
+
+                    final cardBorder = notif.isRead
+                        ? (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))
+                        : (isDark ? primaryColor : const Color(0xFF818CF8));
+
+                    final textColor = isDark ? Colors.white : Colors.black87;
 
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      color: notif.isRead ? Colors.white : const Color(0xFFEFF6FF),
+                      color: cardBg,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: cardBorder,
+                          width: notif.isRead ? 1.0 : 1.5,
+                        ),
+                      ),
+                      elevation: notif.isRead ? 0 : 2,
                       child: ListTile(
+                        onTap: () {
+                          if (!notif.isRead) {
+                            notificationService.markAsRead(notif.notificationId);
+                          }
+                        },
                         leading: Stack(
                           children: [
                             CircleAvatar(
@@ -136,7 +161,11 @@ class NotificationScreen extends StatelessWidget {
                         ),
                         title: RichText(
                           text: TextSpan(
-                            style: const TextStyle(color: Colors.black87, fontSize: 14),
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: 14,
+                              fontWeight: notif.isRead ? FontWeight.normal : FontWeight.bold,
+                            ),
                             children: [
                               TextSpan(
                                 text: '${notif.senderName} ',
@@ -154,7 +183,10 @@ class NotificationScreen extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 4.0),
                           child: Text(
                             timeStr,
-                            style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark ? Colors.white60 : Colors.grey.shade600,
+                            ),
                           ),
                         ),
                         trailing: !notif.isRead
@@ -162,8 +194,15 @@ class NotificationScreen extends StatelessWidget {
                                 width: 10,
                                 height: 10,
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary,
+                                  color: primaryColor,
                                   shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: primaryColor.withValues(alpha: 0.6),
+                                      blurRadius: 6,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
                                 ),
                               )
                             : null,

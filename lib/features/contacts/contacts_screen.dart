@@ -4,7 +4,6 @@ import '../../services/auth_service.dart';
 import '../../services/chat_service.dart';
 import '../../services/user_friend_service.dart';
 import '../chat/call_screen.dart';
-import '../chat/chat_screen.dart';
 import '../friends/friends_screen.dart';
 import '../profile/user_profile_detail_screen.dart';
 
@@ -67,7 +66,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
         return Scaffold(
           appBar: AppBar(
             title: const Text(
-              'Danh bạ',
+              'Chat',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
@@ -138,21 +137,9 @@ class _ContactsScreenState extends State<ContactsScreen> {
                               f.email.toLowerCase().contains(query);
                         }).toList();
 
-                        // SẮP XẾP ƯU TIÊN: NGƯỜI CÓ TIN NHẮN MỚI NẤT ĐƯỢC ĐẨY LÊN ĐẦU
-                        filteredFriends.sort((a, b) {
-                          final timeA = lastMessageMap[a.uid];
-                          final timeB = lastMessageMap[b.uid];
-
-                          if (timeA != null && timeB != null) {
-                            return timeB.compareTo(timeA); // Mới nhất xếp trước
-                          } else if (timeA != null) {
-                            return -1;
-                          } else if (timeB != null) {
-                            return 1;
-                          } else {
-                            return a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase());
-                          }
-                        });
+                        // SẮP XẾP THEO THỨ TỰ BẢNG CHỮ CÁI (A-Z)
+                        filteredFriends.sort((a, b) =>
+                            a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
 
                         return ListView.builder(
                           padding: const EdgeInsets.symmetric(vertical: 4),

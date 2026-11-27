@@ -5,6 +5,7 @@ class MessageModel {
   final String senderId;
   final String receiverId;
   final String text;
+  final bool isRead;
   final DateTime createdAt;
 
   MessageModel({
@@ -12,6 +13,7 @@ class MessageModel {
     required this.senderId,
     required this.receiverId,
     required this.text,
+    this.isRead = false,
     required this.createdAt,
   });
 
@@ -20,6 +22,7 @@ class MessageModel {
       'senderId': senderId,
       'receiverId': receiverId,
       'text': text,
+      'isRead': isRead,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
@@ -35,6 +38,7 @@ class MessageModel {
       senderId: map['senderId'] ?? '',
       receiverId: map['receiverId'] ?? '',
       text: map['text'] ?? '',
+      isRead: map['isRead'] ?? false,
       createdAt: date,
     );
   }

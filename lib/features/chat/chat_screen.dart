@@ -24,6 +24,15 @@ class _ChatScreenState extends State<ChatScreen> {
   final _chatService = ChatService();
 
   @override
+  void initState() {
+    super.initState();
+    _chatService.markMessagesAsRead(
+      widget.currentUser.uid,
+      widget.friendUser.uid,
+    );
+  }
+
+  @override
   void dispose() {
     _messageController.dispose();
     super.dispose();

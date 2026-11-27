@@ -206,6 +206,15 @@ class NotificationService {
         .asBroadcastStream();
   }
 
+  /// Đánh dấu 1 thông báo cụ thể là đã đọc
+  Future<void> markAsRead(String notificationId) async {
+    if (notificationId.isEmpty) return;
+    await _firestore
+        .collection('notifications')
+        .doc(notificationId)
+        .update({'isRead': true});
+  }
+
   /// Đánh dấu tất cả thông báo đã đọc
   Future<void> markAllAsRead(String recipientId) async {
     final query = await _firestore

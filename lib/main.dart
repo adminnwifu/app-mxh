@@ -204,7 +204,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   final List<Widget> _screens = const [
     KeyedSubtree(key: ValueKey('feed_tab'), child: FeedScreen()),
-    KeyedSubtree(key: ValueKey('friends_tab'), child: FriendsScreen()),
+    KeyedSubtree(key: ValueKey('chat_tab'), child: FriendsScreen()),
     KeyedSubtree(key: ValueKey('contacts_tab'), child: ContactsScreen()),
     KeyedSubtree(key: ValueKey('profile_tab'), child: ProfileScreen()),
   ];
@@ -283,9 +283,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               label: 'Trang chủ',
             ),
             NavigationDestination(
-              icon: const Icon(Icons.people_outline_rounded),
-              selectedIcon: Icon(Icons.people_rounded, color: primary),
-              label: 'Bạn bè',
+              icon: const Icon(Icons.chat_bubble_outline_rounded),
+              selectedIcon: Icon(Icons.chat_bubble_rounded, color: primary),
+              label: 'Chat',
             ),
             NavigationDestination(
               icon: const Icon(Icons.contacts_outlined),
