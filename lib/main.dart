@@ -229,6 +229,15 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         final incomingCall = calls.first;
         if (_currentlyShowingCallId != incomingCall.callId) {
           _currentlyShowingCallId = incomingCall.callId;
+
+          // Phát thông báo đẩy cuộc gọi đến tức thời trên thanh trạng thái
+          final callTypeStr = incomingCall.isVideoCall ? '🎥 Cuộc gọi video đến' : '📞 Cuộc gọi thoại đến';
+          NotificationService().showLocalNotification(
+            id: incomingCall.callId.hashCode,
+            title: '$callTypeStr từ ${incomingCall.callerName}',
+            body: 'Chạm để trả lời cuộc gọi ngay!',
+          );
+
           _showIncomingCallDialog(incomingCall);
         }
       });

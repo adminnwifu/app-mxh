@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/message_model.dart';
+import '../models/user_model.dart';
+import 'notification_service.dart';
 
 class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -38,6 +40,26 @@ class ChatService {
       'lastMessageIsRead': false,
       'lastMessageAt': Timestamp.now(),
     }, SetOptions(merge: true));
+
+    // Bắn thông báo đẩy tin nhắn đến cho người nhận
+    try {
+      final senderSnap = await _firestore.collection('users').doc(senderId).get();
+      final senderName = senderSnap.data()?['displayName'] ?? 'Một người bạn';
+      final senderAvatar = senderSnap.data()?['avatarUrl'] ?? '';
+
+      await NotificationService().sendNotification(
+        recipientId: receiverId,
+        sender: UserModel(
+          uid: senderId,
+          email: '',
+          displayName: senderName,
+          avatarUrl: senderAvatar,
+        ),
+        type: 'message',
+        postId: '',
+        text: text,
+      );
+    } catch (_) {}
   }
 
   /// Đánh dấu tất cả tin nhắn trong đoạn chat đã đọc khi người dùng mở ChatScreen

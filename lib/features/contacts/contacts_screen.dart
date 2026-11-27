@@ -66,7 +66,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
         return Scaffold(
           appBar: AppBar(
             title: const Text(
-              'Chat',
+              'Danh bạ',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
@@ -137,9 +137,12 @@ class _ContactsScreenState extends State<ContactsScreen> {
                               f.email.toLowerCase().contains(query);
                         }).toList();
 
-                        // SẮP XẾP THEO THỨ TỰ BẢNG CHỮ CÁI (A-Z)
-                        filteredFriends.sort((a, b) =>
-                            a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
+                        // SẮP XẾP TUYỆT ĐỐI CỐ ĐỊNH THEO TÊN BẢNG CHỮ CÁI (A - Z) BÊN DANH BẠ
+                        filteredFriends.sort((a, b) {
+                          final nameA = a.displayName.trim().toLowerCase();
+                          final nameB = b.displayName.trim().toLowerCase();
+                          return nameA.compareTo(nameB);
+                        });
 
                         return ListView.builder(
                           padding: const EdgeInsets.symmetric(vertical: 4),

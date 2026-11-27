@@ -115,7 +115,11 @@ class NotificationService {
             ? '💬 Bình luận mới'
             : type == 'friend_request'
                 ? '👥 Lời mời kết bạn'
-                : '🔔 Thông báo mới';
+                : type == 'message'
+                    ? '💬 Tin nhắn mới từ ${sender.displayName}'
+                    : type == 'call'
+                        ? '📞 Cuộc gọi từ ${sender.displayName}'
+                        : '🔔 Thông báo mới';
 
     String body = type == 'like'
         ? '${sender.displayName} đã thích bài viết của bạn!'
@@ -123,7 +127,9 @@ class NotificationService {
             ? '${sender.displayName} đã bình luận: "$text"'
             : type == 'friend_request'
                 ? '${sender.displayName} đã gửi lời mời kết bạn!'
-                : text;
+                : type == 'message' || type == 'call'
+                    ? text
+                    : text;
 
     await showLocalNotification(
       id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
@@ -162,6 +168,12 @@ class NotificationService {
             } else if (type == 'friend_request') {
               title = '👥 Lời mời kết bạn';
               body = '$senderName đã gửi lời mời kết bạn!';
+            } else if (type == 'message') {
+              title = '💬 Tin nhắn mới từ $senderName';
+              body = text;
+            } else if (type == 'call') {
+              title = '📞 Cuộc gọi từ $senderName';
+              body = text;
             } else {
               title = '🔔 Thông báo mới';
               body = text;
